@@ -2,40 +2,43 @@
 <template>
   <el-main>
     <!-- 查询表单 -->
-    <el-form :inline="true" :model="queryForm" class="query-form">
-      <el-form-item label="姓名">
-        <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
-      </el-form-item>
-      <el-form-item label="邮箱">
-        <el-input v-model="queryForm.email" placeholder="请输入邮箱" clearable />
-      </el-form-item>
-      <el-form-item label="电话">
-        <el-input v-model="queryForm.phone" placeholder="请输入电话" clearable />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleQuery">查询</el-button>
-        <el-button @click="handleReset">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <el-card class="query-card">
+      <el-form :inline="true" :model="queryForm" class="query-form">
+        <el-form-item label="姓名">
+          <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="queryForm.email" placeholder="请输入邮箱" clearable />
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="queryForm.phone" placeholder="请输入电话" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleQuery">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
-    <!-- 表格 -->
-    <el-table :data="persons" style="width: 100%" v-loading="loading">
-      <el-table-column prop="name" label="Name" />
-      <el-table-column prop="email" label="Email" />
-      <el-table-column prop="phone" label="Phone" />
-    </el-table>
+    <!-- 表格和分页 -->
+    <el-card class="table-card">
+      <el-table :data="persons" style="width: 100%" v-loading="loading">
+        <el-table-column prop="name" label="Name" />
+        <el-table-column prop="email" label="Email" />
+        <el-table-column prop="phone" label="Phone" />
+      </el-table>
 
-    <!-- 分页 -->
-    <el-pagination
-      v-model:current-page="currentPage"
-      v-model:page-size="pageSize"
-      :page-sizes="[5, 10, 20, 50]"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="total"
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-      style="margin-top: 20px"
-    />
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        style="margin-top: 20px"
+      />
+    </el-card>
   </el-main>
 </template>
 
@@ -43,9 +46,19 @@
 .el-main {
   background-color: #e9eef3;
   color: #333;
+  padding: 20px; /* 恢复默认内边距 */
 }
+
+.query-card {
+  margin-bottom: 20px; /* 查询卡片和表格卡片之间的间距 */
+}
+
+.table-card {
+  /* 可选：如果需要顶部间距，可以添加 margin-top */
+}
+
 .query-form {
-  margin-bottom: 20px;
+  margin-bottom: 0; /* 移除表单底部多余间距 */
 }
 </style>
 
@@ -75,14 +88,14 @@ const fetchPersons = async () => {
       params: {
         page: currentPage.value - 1, // Spring Boot 从 0 开始计数
         size: pageSize.value,
-        name: queryForm.value.name || null, // 查询条件
+        name: queryForm.value.name || null,
         email: queryForm.value.email || null,
         phone: queryForm.value.phone || null,
       },
     })
     if (response.data.success) {
       persons.value = response.data.data.content
-      total.value = response.data.data.totalElements
+      total.value = response.data.data.page.totalElements
     } else {
       console.error('Failed to fetch persons:', response.data.message)
     }
