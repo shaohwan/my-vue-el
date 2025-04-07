@@ -8,9 +8,9 @@
       @select="handleSelect"
       router
     >
-      <template v-for="menu in menuList" :key="menu.id">
+      <template v-for="menu in filteredMenuList" :key="menu.id">
         <el-menu-item
-          v-if="!menu.children || menu.children.length === 0"
+          v-if="(!menu.children || menu.children.length === 0) && menu.type === 'MENU'"
           :index="menu.path"
           :route="{ path: menu.path }"
         >
@@ -19,7 +19,7 @@
           </el-icon>
           <span>{{ menu.name }}</span>
         </el-menu-item>
-        <el-sub-menu v-else :index="menu.id.toString()">
+        <el-sub-menu v-else-if="menu.type === 'MENU'" :index="menu.id.toString()">
           <template #title>
             <el-icon v-if="menu.icon">
               <component :is="menu.icon" />
@@ -31,6 +31,7 @@
             :key="child.id"
             :index="child.path"
             :route="{ path: child.path }"
+            v-show="child.type === 'MENU'"
           >
             <el-icon v-if="child.icon">
               <component :is="child.icon" />
@@ -57,7 +58,7 @@
 </style>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
@@ -67,25 +68,32 @@ const router = useRouter()
 const menuList = ref([])
 const activeIndex = ref('')
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+
+// 计算属性：过滤出仅用于菜单的权限项
+const filteredMenuList = computed(() => {
+  const filterMenus = (menus) => {
+    return menus
+      .filter((menu) => menu.type === 'MENU') // 只显示 MENU 类型
+      .map((menu) => ({
+        ...menu,
+        icon: getIconComponent(menu.icon),
+        children: menu.children && menu.children.length > 0 ? filterMenus(menu.children) : [],
+      }))
+  }
+  return filterMenus(menuList.value)
+})
+
 const getIconComponent = (iconName) => {
   return iconName && ElementPlusIconsVue[iconName] ? ElementPlusIconsVue[iconName] : null
 }
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 
 const fetchMenuData = async () => {
   try {
     const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
     if (response.data.code === 200 && response.data.success) {
-      menuList.value = response.data.data.map((menu) => ({
-        ...menu,
-        icon: getIconComponent(menu.icon),
-        children: menu.children.map((child) => ({
-          ...child,
-          icon: getIconComponent(child.icon),
-        })),
-      }))
-      addDynamicRoutes(menuList.value)
+      menuList.value = response.data.data
+      addDynamicRoutes(menuList.value) // 动态添加路由
       activeIndex.value = router.currentRoute.value.path || '/home'
     } else {
       console.error('菜单加载失败:', response.data.message)
