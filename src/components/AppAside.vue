@@ -9,8 +9,9 @@
       router
     >
       <template v-for="menu in filteredMenuList" :key="menu.id">
+        <!-- 叶子节点 -->
         <el-menu-item
-          v-if="(!menu.children || menu.children.length === 0) && menu.type === 'MENU'"
+          v-if="menu.type === 'MENU' && (!menu.children || menu.children.length === 0)"
           :index="menu.path"
           :route="{ path: menu.path }"
         >
@@ -19,7 +20,11 @@
           </el-icon>
           <span>{{ menu.name }}</span>
         </el-menu-item>
-        <el-sub-menu v-else-if="menu.type === 'MENU'" :index="menu.id.toString()">
+        <!-- 有子节点的菜单 -->
+        <el-sub-menu
+          v-else-if="menu.type === 'MENU' && menu.children && menu.children.length > 0"
+          :index="menu.id.toString()"
+        >
           <template #title>
             <el-icon v-if="menu.icon">
               <component :is="menu.icon" />
@@ -90,10 +95,19 @@ const getIconComponent = (iconName) => {
 
 const fetchMenuData = async () => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
+    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`, {
+      params: { name: 'daniel' },
+    })
     if (response.data.code === 200 && response.data.success) {
-      menuList.value = response.data.data
-      addDynamicRoutes(menuList.value) // 动态添加路由
+      // 规范化数据
+      const normalizeMenu = (menu) => {
+        return {
+          ...menu,
+          children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
+        }
+      }
+      menuList.value = response.data.data.map(normalizeMenu)
+      addDynamicRoutes(menuList.value)
       activeIndex.value = router.currentRoute.value.path || '/home'
     } else {
       console.error('菜单加载失败:', response.data.message)

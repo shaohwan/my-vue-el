@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- 查询表单 -->
     <el-card class="query-card">
       <el-form :inline="true" :model="queryForm" class="query-form">
         <el-form-item label="姓名">
@@ -13,18 +12,24 @@
           <el-input v-model="queryForm.phone" placeholder="请输入电话" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleQuery" v-auth="'user:search'">查询</el-button>
+          <el-button @click="handleReset" v-auth="'user:reset'">重置</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
-    <!-- 表格和分页 -->
     <el-card class="table-card">
       <el-table :data="persons" style="width: 100%" v-loading="loading">
         <el-table-column prop="name" label="Name" />
         <el-table-column prop="email" label="Email" />
         <el-table-column prop="phone" label="Phone" />
+        <el-table-column label="操作" width="150">
+          <template #default="{ row }">
+            <el-button v-auth="'user_delete'" type="danger" size="small" @click="handleDelete(row)">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <el-pagination
@@ -47,7 +52,6 @@
 }
 
 .table-card {
-  /* 可选样式 */
 }
 
 .query-form {
@@ -57,8 +61,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
+const route = useRoute()
 const persons = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -120,7 +127,28 @@ const handleCurrentChange = (val) => {
   fetchPersons()
 }
 
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确定删除该用户吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(async () => {
+      try {
+        await axios.delete(`${apiBaseUrl}/api/person/${row.id}`)
+        ElMessage.success('删除成功')
+        fetchPersons()
+      } catch (error) {
+        ElMessage.error('删除失败')
+      }
+    })
+    .catch(() => {
+      ElMessage.info('已取消删除')
+    })
+}
+
 onMounted(() => {
+  console.log('当前路由权限:', route.meta.permissions)
   fetchPersons()
 })
 </script>
