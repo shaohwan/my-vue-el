@@ -8,43 +8,7 @@
       @select="handleSelect"
       router
     >
-      <template v-for="menu in filteredMenuList" :key="menu.id">
-        <!-- 叶子节点 -->
-        <el-menu-item
-          v-if="menu.type === 'MENU' && (!menu.children || menu.children.length === 0)"
-          :index="menu.path"
-          :route="{ path: menu.path }"
-        >
-          <el-icon v-if="menu.icon">
-            <component :is="menu.icon" />
-          </el-icon>
-          <span>{{ menu.name }}</span>
-        </el-menu-item>
-        <!-- 有子节点的菜单 -->
-        <el-sub-menu
-          v-else-if="menu.type === 'MENU' && menu.children && menu.children.length > 0"
-          :index="menu.id.toString()"
-        >
-          <template #title>
-            <el-icon v-if="menu.icon">
-              <component :is="menu.icon" />
-            </el-icon>
-            <span>{{ menu.name }}</span>
-          </template>
-          <el-menu-item
-            v-for="child in menu.children"
-            :key="child.id"
-            :index="child.path"
-            :route="{ path: child.path }"
-            v-show="child.type === 'MENU'"
-          >
-            <el-icon v-if="child.icon">
-              <component :is="child.icon" />
-            </el-icon>
-            <span>{{ child.name }}</span>
-          </el-menu-item>
-        </el-sub-menu>
-      </template>
+      <menu-item v-for="menu in filteredMenuList" :key="menu.id" :menu="menu" />
     </el-menu>
   </el-aside>
 </template>
@@ -68,6 +32,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addDynamicRoutes } from '../router'
+import MenuItem from './MenuItem.vue' // 引入递归组件
 
 const router = useRouter()
 const menuList = ref([])
@@ -79,7 +44,7 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 const filteredMenuList = computed(() => {
   const filterMenus = (menus) => {
     return menus
-      .filter((menu) => menu.type === 'MENU') // 只显示 MENU 类型
+      .filter((menu) => menu.type === 'MENU')
       .map((menu) => ({
         ...menu,
         icon: getIconComponent(menu.icon),
@@ -99,13 +64,10 @@ const fetchMenuData = async () => {
       params: { name: 'daniel' },
     })
     if (response.data.code === 200 && response.data.success) {
-      // 规范化数据
-      const normalizeMenu = (menu) => {
-        return {
-          ...menu,
-          children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
-        }
-      }
+      const normalizeMenu = (menu) => ({
+        ...menu,
+        children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
+      })
       menuList.value = response.data.data.map(normalizeMenu)
       addDynamicRoutes(menuList.value)
       activeIndex.value = router.currentRoute.value.path || '/home'
