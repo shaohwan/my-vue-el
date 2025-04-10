@@ -2,8 +2,7 @@
   <!-- 叶子节点 -->
   <el-menu-item
     v-if="menu.type === 'MENU' && (!menu.children || menu.children.length === 0)"
-    :index="menu.path"
-    :route="{ path: menu.path }"
+    :index="'/home/' + (menu.path.startsWith('/') ? menu.path.slice(1) : menu.path)"
   >
     <el-icon v-if="menu.icon">
       <component :is="menu.icon" />
@@ -13,7 +12,7 @@
   <!-- 有子节点的菜单 -->
   <el-sub-menu
     v-else-if="menu.type === 'MENU' && menu.children && menu.children.length > 0"
-    :index="menu.id.toString()"
+    :index="'/home/' + (menu.path.startsWith('/') ? menu.path.slice(1) : menu.path)"
   >
     <template #title>
       <el-icon v-if="menu.icon">

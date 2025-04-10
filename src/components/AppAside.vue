@@ -8,6 +8,7 @@
       @select="handleSelect"
       router
     >
+      <el-menu-item index="/home">首页</el-menu-item>
       <menu-item v-for="menu in filteredMenuList" :key="menu.id" :menu="menu" />
     </el-menu>
   </el-aside>
@@ -27,18 +28,16 @@
 </style>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '../stores/auth'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import { addDynamicRoutes } from '../router'
-import MenuItem from './MenuItem.vue' // 引入递归组件
+import MenuItem from './MenuItem.vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const menuList = ref([])
 const activeIndex = ref('')
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 
 // 计算属性：过滤出仅用于菜单的权限项
 const filteredMenuList = computed(() => {
@@ -58,33 +57,18 @@ const getIconComponent = (iconName) => {
   return iconName && ElementPlusIconsVue[iconName] ? ElementPlusIconsVue[iconName] : null
 }
 
-const fetchMenuData = async () => {
-  try {
-    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`, {
-      params: { name: 'daniel' },
-    })
-    if (response.data.code === 200 && response.data.success) {
-      const normalizeMenu = (menu) => ({
-        ...menu,
-        children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
-      })
-      menuList.value = response.data.data.map(normalizeMenu)
-      addDynamicRoutes(menuList.value)
-      activeIndex.value = router.currentRoute.value.path || '/home'
-    } else {
-      console.error('菜单加载失败:', response.data.message)
-    }
-  } catch (error) {
-    console.error('获取菜单失败:', error)
-  }
-}
-
 const handleSelect = (index) => {
   activeIndex.value = index
   router.push(index)
 }
 
-onMounted(() => {
-  fetchMenuData()
+onMounted(async () => {
+  if (!menuList.value.length) {
+    const loadedMenu = await import('../router').then((m) => m.loadMenuAndRoutes())
+    if (loadedMenu) {
+      menuList.value = loadedMenu
+    }
+  }
+  activeIndex.value = router.currentRoute.value.path || '/home'
 })
 </script>

@@ -17,7 +17,9 @@
       <el-table-column label="操作">
         <template #default="{ row }">
           <el-button type="text" @click="showEditDialog(row)" v-auth="'user:edit'">编辑</el-button>
-          <el-button type="text" @click="confirmDelete(row.id)" v-auth="'user:delete'">删除</el-button>
+          <el-button type="text" @click="confirmDelete(row.id)" v-auth="'user:delete'"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
