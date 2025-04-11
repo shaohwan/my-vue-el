@@ -224,7 +224,7 @@ const handleLogin = async () => {
     loading.value = true
 
     const response = await login(loginForm.value.username, loginForm.value.password)
-    if (response.code === 200 && response.success) {
+    if (response.code == 200) {
       authStore.login(loginForm.value.username)
       await loadMenuAndRoutes()
       router.push('/home')

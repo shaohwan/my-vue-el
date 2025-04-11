@@ -94,7 +94,7 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     const response = await axios.get(`${apiBaseUrl}/api/user`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       users.value = response.data.data
     }
   } catch (error) {
@@ -108,7 +108,7 @@ const fetchUsers = async () => {
 const fetchRoles = async () => {
   try {
     const response = await axios.get(`${apiBaseUrl}/api/role`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       roles.value = response.data.data
     }
   } catch (error) {
@@ -136,7 +136,7 @@ const showEditDialog = async (user) => {
   dialogTitle.value = '编辑用户'
   try {
     const response = await axios.get(`${apiBaseUrl}/api/user/${user.id}`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       const userData = response.data.data
       form.value = {
         id: userData.id,
@@ -164,18 +164,16 @@ const saveUser = async () => {
     if (!userData.id) {
       // 新增时包含密码
       delete userData.id
+      await axios.post(`${apiBaseUrl}/api/user`, userData)
+      ElMessage.success('保存成功')
     } else {
       // 编辑时不更新密码（除非有专门的修改密码功能）
       delete userData.password
+      await axios.put(`${apiBaseUrl}/api/user`, userData)
+      ElMessage.success('更新成功')
     }
-    const response = await axios.post(`${apiBaseUrl}/api/user`, userData)
-    if (response.data.success) {
-      dialogVisible.value = false
-      fetchUsers()
-      ElMessage.success('保存成功')
-    } else {
-      ElMessage.error(response.data.message || '保存失败')
-    }
+    dialogVisible.value = false
+    fetchUsers()
   } catch (error) {
     ElMessage.error('保存失败: ' + (error.response?.data?.message || error.message))
   } finally {
@@ -197,7 +195,7 @@ const deleteUser = async (id) => {
   try {
     loading.value = true
     const response = await axios.delete(`${apiBaseUrl}/api/user/${id}`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       fetchUsers()
       ElMessage.success(response.data.message || '删除成功')
     } else {

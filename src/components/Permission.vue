@@ -177,7 +177,7 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 const fetchPermissionTree = async () => {
   try {
     const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       permissionTree.value = response.data.data
       menuTree.value = filterMenuTree(response.data.data)
     } else {
@@ -193,7 +193,7 @@ const fetchPermissionTree = async () => {
 const fetchPermissionDetail = async (id) => {
   try {
     const response = await axios.get(`${apiBaseUrl}/api/menu/${id}`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       return response.data.data
     } else {
       ElMessage.error('获取权限详情失败')

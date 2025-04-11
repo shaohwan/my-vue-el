@@ -69,7 +69,7 @@ const fetchRoles = async () => {
   loading.value = true
   try {
     const response = await axios.get(`${apiBaseUrl}/api/role`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       roles.value = response.data.data
     }
   } catch (error) {
@@ -82,7 +82,7 @@ const fetchRoles = async () => {
 const fetchPermissionTree = async () => {
   try {
     const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       permissionTree.value = response.data.data
     }
   } catch (error) {
@@ -104,7 +104,7 @@ const showEditDialog = async (role) => {
   dialogTitle.value = '编辑角色'
   try {
     const response = await axios.get(`${apiBaseUrl}/api/role/${role.id}`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       const roleData = response.data.data
       form.value = {
         id: roleData.id,
@@ -146,19 +146,16 @@ const saveRole = async () => {
     console.log('保存时的权限ID:', form.value.permissionIds)
 
     loading.value = true
-    const response = await axios.post(`${apiBaseUrl}/api/role`, {
-      id: form.value.id,
-      name: form.value.name,
-      description: form.value.description,
-      permissionIds: form.value.permissionIds,
-    })
-    if (response.data.success) {
-      dialogVisible.value = false
-      fetchRoles()
-      ElMessage.success('保存成功')
+    const data = { ...form.value }
+    if (data.id) {
+      await axios.put(`${apiBaseUrl}/api/role`, data)
+      ElMessage.success('更新成功')
     } else {
-      ElMessage.error('保存失败: ' + response.data.message)
+      await axios.post(`${apiBaseUrl}/api/role`, data)
+      ElMessage.success('添加成功')
     }
+    dialogVisible.value = false
+    fetchRoles()
   } catch (error) {
     ElMessage.error('保存失败: ' + error.message)
   } finally {
@@ -182,7 +179,7 @@ const deleteRole = async (id) => {
   try {
     loading.value = true
     const response = await axios.delete(`${apiBaseUrl}/api/role/${id}`)
-    if (response.data.success) {
+    if (response.data.code == 200) {
       fetchRoles()
       ElMessage.success('删除成功')
     } else {

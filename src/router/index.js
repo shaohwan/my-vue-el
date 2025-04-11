@@ -103,7 +103,7 @@ const loadMenuAndRoutes = async () => {
     const response = await axios.get(`${apiBaseUrl}/api/menu/tree`, {
       params: { name: authStore.username || 'default' },
     })
-    if (response.data.code === 200 && response.data.success) {
+    if (response.data.code == 200) {
       const normalizeMenu = (menu) => ({
         ...menu,
         children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
