@@ -457,7 +457,7 @@ const handleDelete = (data) => {
   )
     .then(async () => {
       try {
-        const response = await axios.delete(`${apiBaseUrl}/api/menu/${id}`)
+        const response = await axios.delete(`${apiBaseUrl}/api/menu/${data.id}`)
         ElMessage.success(response.data || '删除成功')
         fetchPermissionTree()
       } catch (error) {
