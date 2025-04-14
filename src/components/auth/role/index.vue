@@ -1,26 +1,45 @@
 <template>
   <div>
-    <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增角色</el-button>
-    <el-table :data="roles" style="width: 100%; margin-top: 20px" v-loading="loading">
-      <el-table-column prop="name" label="角色名称" />
-      <el-table-column prop="description" label="描述" />
-      <el-table-column label="操作">
-        <template #default="{ row }">
-          <el-button type="text" @click="showEditDialog(row)" v-auth="'role:edit'">编辑</el-button>
-          <el-button type="text" @click="confirmDelete(row.id)" v-auth="'role:delete'"
-            >删除</el-button
-          >
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-card class="control-card">
+      <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增角色</el-button>
+    </el-card>
 
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="50%">
+    <el-card class="table-card">
+      <el-table :data="roles" style="width: 100%" v-loading="loading" class="custom-table">
+        <el-table-column prop="name" label="角色名称" />
+        <el-table-column prop="description" label="描述" />
+        <el-table-column label="操作" width="200">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              size="small"
+              @click="showEditDialog(row)"
+              v-auth="'role:edit'"
+              class="action-button"
+            >
+              编辑
+            </el-button>
+            <el-button
+              type="danger"
+              size="small"
+              @click="confirmDelete(row.id)"
+              v-auth="'role:delete'"
+              class="action-button"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="50%" class="custom-dialog">
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" />
+          <el-input v-model="form.name" placeholder="请输入角色名称" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" />
+          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" :rows="4" />
         </el-form-item>
         <el-form-item label="权限选择">
           <el-tree
@@ -30,8 +49,15 @@
             show-checkbox
             node-key="id"
             :default-checked-keys="form.permissionIds"
-            :default-expand-all="true"
-          />
+            default-expand-all
+            class="custom-tree"
+          >
+            <template #default="{ node, data }">
+              <div class="custom-tree-node">
+                <span class="node-label">{{ data.name }}</span>
+              </div>
+            </template>
+          </el-tree>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -74,6 +100,7 @@ const fetchRoles = async () => {
     }
   } catch (error) {
     console.error('获取角色失败:', error)
+    ElMessage.error('获取角色失败')
   } finally {
     loading.value = false
   }
@@ -87,6 +114,7 @@ const fetchPermissionTree = async () => {
     }
   } catch (error) {
     console.error('获取权限树失败:', error)
+    ElMessage.error('获取权限树失败')
   }
 }
 
@@ -119,6 +147,7 @@ const showEditDialog = async (role) => {
     }
   } catch (error) {
     console.error('获取角色详情失败:', error)
+    ElMessage.error('获取角色详情失败')
   }
 }
 
@@ -143,7 +172,6 @@ const saveRole = async () => {
     await formRef.value.validate()
     const checkedNodes = tree.value.getCheckedNodes(false, true) // 包括父节点和叶子节点
     form.value.permissionIds = checkedNodes.map((node) => node.id)
-    console.log('保存时的权限ID:', form.value.permissionIds)
 
     loading.value = true
     const data = { ...form.value }
@@ -171,7 +199,7 @@ const confirmDelete = (id) => {
   })
     .then(() => deleteRole(id))
     .catch(() => {
-      // 用户取消删除
+      ElMessage.info('已取消删除')
     })
 }
 
@@ -199,7 +227,115 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.el-table {
-  margin-top: 20px;
+/* Control Card */
+.control-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.control-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Table Card */
+.table-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Table */
+.custom-table {
+  padding: 10px 0;
+  width: 100%;
+}
+
+:deep(.el-table__row) {
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #e8ecef; /* 行分割线 */
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f5f7fa;
+}
+
+:deep(.el-table__cell) {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #303133;
+}
+
+/* Action Buttons */
+.action-button {
+  transition: all 0.2s;
+}
+
+.action-button:hover {
+  transform: scale(1.05);
+}
+
+/* Tree */
+.custom-tree {
+  padding: 3px 0; /* 进一步减少整体padding */
+  width: 100%;
+}
+
+/* Tree Node */
+.custom-tree-node {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 4px 6px; /* 更紧凑的节点padding */
+  box-sizing: border-box;
+  background-color: #fff;
+  transition: background-color 0.2s;
+}
+
+.custom-tree-node:hover {
+  background-color: #f5f7fa;
+}
+
+.node-label {
+  font-size: 13px; /* 减小字体以适应紧凑布局 */
+  color: #303133;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fix Element Plus Tree Indentation */
+:deep(.el-tree-node__content) {
+  height: auto;
+  padding: 0;
+  align-items: center;
+  line-height: 24px; /* 进一步减小行高 */
+}
+
+/* Dialog */
+.custom-dialog {
+  border-radius: 8px;
+}
+
+.custom-dialog :deep(.el-dialog__header) {
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #e8ecef;
+  padding: 16px 20px;
+  margin-bottom: 0;
+}
+
+.custom-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.custom-dialog :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #303133;
+}
+
+.custom-dialog :deep(.el-button) {
+  border-radius: 6px;
+  padding: 10px 20px;
 }
 </style>

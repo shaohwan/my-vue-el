@@ -189,11 +189,11 @@ body {
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { loadMenuAndRoutes } from '../router'
+import { loadMenuAndRoutes } from '@/router'
 
 const loginFormRef = ref(null)
 const router = useRouter()

@@ -20,6 +20,7 @@
   right: 0;
   bottom: 0;
   left: 0;
+  background: #f0f2f5; /* 浅灰背景，匹配卡片hover */
 }
 
 .full-height {
@@ -35,29 +36,37 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #ffffff; /* 白色卡片背景 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 卡片阴影 */
+  border-radius: 8px 0 0 8px; /* 左侧圆角 */
+  margin: 0 8px 8px 0; /* 移除顶端margin，紧贴header */
 }
 
 :deep(.el-main) {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background-color: #e9eef3;
-  color: #333;
+  padding: 0; /* 无padding，交给子组件 */
+  background: transparent;
+  color: #303133;
 }
 
-:deep(.el-footer) {
-  flex-shrink: 0;
-  height: 60px;
-  background-color: #b3c0d1;
-  color: #333;
-  text-align: center;
-  line-height: 60px;
+:deep(.el-main::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(.el-main::-webkit-scrollbar-thumb) {
+  background: #d3dce6;
+  border-radius: 3px;
+}
+
+:deep(.el-main::-webkit-scrollbar-track) {
+  background: transparent;
 }
 </style>
 
 <script setup>
-import AppHeader from './AppHeader.vue'
-import AppAside from './AppAside.vue'
-import AppMain from './AppMain.vue'
-import AppFooter from './AppFooter.vue'
+import AppHeader from './layout/Header.vue'
+import AppAside from './layout/Aside.vue'
+import AppMain from './layout/Main.vue'
+import AppFooter from './layout/Footer.vue'
 </script>

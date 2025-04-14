@@ -5,25 +5,40 @@
     </el-card>
 
     <el-card class="tree-card">
+      <!-- 列头 -->
+      <div class="tree-header">
+        <span class="header-label">名称</span>
+        <span class="header-type">类型</span>
+        <span class="header-code">标识</span>
+        <span class="header-url">路径</span>
+        <span class="header-actions">操作</span>
+      </div>
+      <!-- 树形结构 -->
       <el-tree
         :data="permissionTree"
         :props="{ label: 'name', children: 'children' }"
         node-key="id"
         default-expand-all
         highlight-current
+        class="custom-tree"
       >
         <template #default="{ node, data }">
-          <span class="custom-tree-node">
-            <span
-              >{{ data.name }} {{ data.type === 'BUTTON' ? '(' + data.code + ')' : '' }} -
-              {{ data.type }}</span
-            >
-            <span>
+          <div class="custom-tree-node">
+            <span class="node-label">{{ data.name }}</span>
+            <span class="node-type">
+              <el-tag :type="data.type === 'MENU' ? 'success' : 'primary'" size="small">
+                {{ data.type === 'MENU' ? '菜单' : '按钮' }}
+              </el-tag>
+            </span>
+            <span class="node-code">{{ data.code || '-' }}</span>
+            <span class="node-url">{{ data.url || '-' }}</span>
+            <span class="node-actions">
               <el-button
                 type="primary"
                 size="small"
                 @click.stop="handleEdit(data)"
                 v-auth="'permission:edit'"
+                class="action-button"
               >
                 编辑
               </el-button>
@@ -32,17 +47,18 @@
                 size="small"
                 @click.stop="handleDelete(data)"
                 v-auth="'permission:delete'"
+                class="action-button"
               >
                 删除
               </el-button>
             </span>
-          </span>
+          </div>
         </template>
       </el-tree>
     </el-card>
 
     <!-- 添加/编辑权限对话框 -->
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="30%">
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="30%" class="custom-dialog">
       <el-form :model="permissionForm" :rules="rules" ref="permissionFormRef" label-width="100px">
         <el-form-item label="权限名称" prop="name">
           <el-input v-model="permissionForm.name" placeholder="请输入权限名称" />
@@ -60,11 +76,8 @@
             <el-option label="按钮" value="BUTTON" />
           </el-select>
         </el-form-item>
-        <el-form-item label="路径" prop="path" v-if="permissionForm.type === 'MENU'">
-          <el-input v-model="permissionForm.path" placeholder="请输入路径" />
-        </el-form-item>
-        <el-form-item label="组件" prop="component" v-if="permissionForm.type === 'MENU'">
-          <el-input v-model="permissionForm.component" placeholder="请输入组件路径" />
+        <el-form-item label="路径" prop="url" v-if="permissionForm.type === 'MENU'">
+          <el-input v-model="permissionForm.url" placeholder="请输入路径" />
         </el-form-item>
         <el-form-item label="图标" v-if="permissionForm.type === 'MENU'">
           <el-input v-model="permissionForm.icon" placeholder="请输入图标类名" />
@@ -92,19 +105,174 @@
 </template>
 
 <style scoped>
+/* Control Card */
 .control-card {
   margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
 }
 
+.control-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Tree Card */
 .tree-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.custom-tree-node {
-  flex: 1;
+.custom-tree {
+  padding: 10px 0;
+  width: 100%;
+}
+
+/* Tree Header */
+.tree-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-right: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #e8ecef;
+  font-weight: 500;
+  color: #303133;
+  font-size: 14px;
+}
+
+.header-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-type {
+  width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.header-code {
+  width: 120px; /* 标识列宽度 */
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.header-url {
+  width: 200px; /* 路径列宽度 */
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.header-actions {
+  width: 140px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Tree Node */
+.custom-tree-node {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #e8ecef;
+  background-color: #fff;
+  transition: background-color 0.2s;
+}
+
+.custom-tree-node:hover {
+  background-color: #f5f7fa;
+}
+
+.node-label {
+  font-size: 14px;
+  color: #303133;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-type {
+  width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.node-code {
+  font-size: 14px;
+  color: #606266;
+  width: 120px; /* 与列头标识列对齐 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.node-url {
+  font-size: 14px;
+  color: #606266;
+  width: 200px; /* 与列头路径列对齐 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.node-actions {
+  display: flex;
+  gap: 8px;
+  width: 140px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.action-button {
+  transition: all 0.2s;
+}
+
+.action-button:hover {
+  transform: scale(1.05);
+}
+
+/* Fix Element Plus Tree Indentation */
+:deep(.el-tree-node__content) {
+  height: auto;
+  padding: 0;
+  align-items: center;
+}
+
+/* Dialog */
+.custom-dialog {
+  border-radius: 8px;
+}
+
+.custom-dialog :deep(.el-dialog__header) {
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #e8ecef;
+  padding: 16px 20px;
+  margin-bottom: 0;
+}
+
+.custom-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.custom-dialog :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #303133;
+}
+
+.custom-dialog :deep(.el-button) {
+  border-radius: 6px;
+  padding: 10px 20px;
 }
 </style>
 
@@ -122,8 +290,7 @@ const permissionForm = ref({
   name: '',
   code: '',
   type: 'MENU',
-  path: '',
-  component: '',
+  url: '',
   icon: '',
   parentId: null,
   orderNum: 0,
@@ -145,23 +312,11 @@ const rules = {
     },
   ],
   type: [{ required: true, message: '请选择类型', trigger: 'change' }],
-  path: [
+  url: [
     {
       validator: (rule, value, callback) => {
         if (permissionForm.value.type === 'MENU' && !value) {
           callback(new Error('请输入路径'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  component: [
-    {
-      validator: (rule, value, callback) => {
-        if (permissionForm.value.type === 'MENU' && !value) {
-          callback(new Error('请输入组件路径'))
         } else {
           callback()
         }
@@ -219,8 +374,7 @@ const filterMenuTree = (tree) => {
 // 类型切换时重置相关字段
 const handleTypeChange = (type) => {
   if (type === 'BUTTON') {
-    permissionForm.value.path = ''
-    permissionForm.value.component = ''
+    permissionForm.value.url = ''
     permissionForm.value.icon = ''
   } else if (type === 'MENU') {
     permissionForm.value.code = ''
@@ -236,8 +390,7 @@ const handleAdd = () => {
     name: '',
     code: '',
     type: 'MENU',
-    path: '',
-    component: '',
+    url: '',
     icon: '',
     parentId: null,
     orderNum: 0,
@@ -255,8 +408,7 @@ const handleEdit = async (data) => {
       name: permissionData.name,
       code: permissionData.code || '',
       type: permissionData.type,
-      path: permissionData.path || '',
-      component: permissionData.component || '',
+      url: permissionData.url || '',
       icon: permissionData.icon || '',
       parentId:
         permissionData.parentId || (permissionData.parent ? permissionData.parent.id : null),
@@ -305,7 +457,7 @@ const handleDelete = (data) => {
   )
     .then(async () => {
       try {
-        const response = await axios.delete(`${apiBaseUrl}/api/menu/${data.id}`)
+        const response = await axios.delete(`${apiBaseUrl}/api/menu/${id}`)
         ElMessage.success(response.data || '删除成功')
         fetchPermissionTree()
       } catch (error) {
