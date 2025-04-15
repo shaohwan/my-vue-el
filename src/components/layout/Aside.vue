@@ -28,7 +28,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { House } from '@element-plus/icons-vue'
 import MenuItem from './MenuItem.vue'
-import { basePath as routerBasePath } from '../../router'
+import { basePath as routerBasePath } from '@/router'
 
 const router = useRouter()
 const menuList = ref([])

@@ -278,7 +278,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import service from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const permissionTree = ref([])
@@ -331,32 +331,17 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 // 获取权限树
 const fetchPermissionTree = async () => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
-    if (response.data.code == 200) {
-      permissionTree.value = response.data.data
-      menuTree.value = filterMenuTree(response.data.data)
-    } else {
-      ElMessage.error('获取权限树失败')
-    }
-  } catch (error) {
-    ElMessage.error('请求失败')
-    console.error(error)
-  }
+    const response = await service.get('/api/menu/tree')
+    permissionTree.value = response
+    menuTree.value = filterMenuTree(response)
+  } catch (error) {}
 }
 
 // 获取单个权限详情
 const fetchPermissionDetail = async (id) => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/menu/${id}`)
-    if (response.data.code == 200) {
-      return response.data.data
-    } else {
-      ElMessage.error('获取权限详情失败')
-      return null
-    }
+    return await service.get(`/api/menu/${id}`)
   } catch (error) {
-    ElMessage.error('请求权限详情失败')
-    console.error(error)
     return null
   }
 }
@@ -428,18 +413,14 @@ const handleSave = () => {
       }
       try {
         if (data.id) {
-          await axios.put(`${apiBaseUrl}/api/menu`, data)
-          ElMessage.success('更新成功')
+          await service.put('/api/menu', data)
         } else {
-          await axios.post(`${apiBaseUrl}/api/menu`, data)
-          ElMessage.success('添加成功')
+          await service.post('/api/menu', data)
         }
+        ElMessage.success('操作成功')
         dialogVisible.value = false
         fetchPermissionTree()
-      } catch (error) {
-        ElMessage.error('保存失败')
-        console.error(error)
-      }
+      } catch (error) {}
     }
   })
 }
@@ -457,17 +438,10 @@ const handleDelete = (data) => {
   )
     .then(async () => {
       try {
-        const response = await axios.delete(`${apiBaseUrl}/api/menu/${data.id}`)
-        ElMessage.success(response.data || '删除成功')
+        await service.delete(`/api/menu/${data.id}`)
+        ElMessage.success('操作成功')
         fetchPermissionTree()
-      } catch (error) {
-        if (error.response && error.response.data) {
-          ElMessage.error(error.response.data || '删除失败')
-        } else {
-          ElMessage.error('删除失败')
-        }
-        console.error(error)
-      }
+      } catch (error) {}
     })
     .catch(() => {
       ElMessage.info('已取消删除')

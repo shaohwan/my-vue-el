@@ -70,7 +70,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-import axios from 'axios'
+import service from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
@@ -94,13 +94,9 @@ const loading = ref(false)
 const fetchRoles = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/role`)
-    if (response.data.code == 200) {
-      roles.value = response.data.data
-    }
+    const response = await service.get('/api/role')
+    roles.value = response
   } catch (error) {
-    console.error('获取角色失败:', error)
-    ElMessage.error('获取角色失败')
   } finally {
     loading.value = false
   }
@@ -108,14 +104,9 @@ const fetchRoles = async () => {
 
 const fetchPermissionTree = async () => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`)
-    if (response.data.code == 200) {
-      permissionTree.value = response.data.data
-    }
-  } catch (error) {
-    console.error('获取权限树失败:', error)
-    ElMessage.error('获取权限树失败')
-  }
+    const response = await service.get('/api/menu/tree')
+    permissionTree.value = response
+  } catch (error) {}
 }
 
 const showAddDialog = async () => {
@@ -131,24 +122,19 @@ const showAddDialog = async () => {
 const showEditDialog = async (role) => {
   dialogTitle.value = '编辑角色'
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/role/${role.id}`)
-    if (response.data.code == 200) {
-      const roleData = response.data.data
-      form.value = {
-        id: roleData.id,
-        name: roleData.name,
-        description: roleData.description || '',
-        permissionIds: roleData.permissionIds || [],
-      }
-      dialogVisible.value = true
-      await nextTick()
-      const leafIds = form.value.permissionIds.filter((id) => isLeafNode(id))
-      tree.value.setCheckedKeys(leafIds)
+    const response = await service.get(`/api/role/${role.id}`)
+    const roleData = response
+    form.value = {
+      id: roleData.id,
+      name: roleData.name,
+      description: roleData.description || '',
+      permissionIds: roleData.permissionIds || [],
     }
-  } catch (error) {
-    console.error('获取角色详情失败:', error)
-    ElMessage.error('获取角色详情失败')
-  }
+    dialogVisible.value = true
+    await nextTick()
+    const leafIds = form.value.permissionIds.filter((id) => isLeafNode(id))
+    tree.value.setCheckedKeys(leafIds)
+  } catch (error) {}
 }
 
 const isLeafNode = (id) => {
@@ -176,16 +162,14 @@ const saveRole = async () => {
     loading.value = true
     const data = { ...form.value }
     if (data.id) {
-      await axios.put(`${apiBaseUrl}/api/role`, data)
-      ElMessage.success('更新成功')
+      await service.put('/api/role', data)
     } else {
-      await axios.post(`${apiBaseUrl}/api/role`, data)
-      ElMessage.success('添加成功')
+      await service.post('/api/role', data)
     }
+    ElMessage.success('操作成功')
     dialogVisible.value = false
     fetchRoles()
   } catch (error) {
-    ElMessage.error('保存失败: ' + error.message)
   } finally {
     loading.value = false
   }
@@ -206,15 +190,10 @@ const confirmDelete = (id) => {
 const deleteRole = async (id) => {
   try {
     loading.value = true
-    const response = await axios.delete(`${apiBaseUrl}/api/role/${id}`)
-    if (response.data.code == 200) {
-      fetchRoles()
-      ElMessage.success('删除成功')
-    } else {
-      ElMessage.error('删除失败: ' + response.data.message)
-    }
+    await service.delete(`/api/role/${id}`)
+    ElMessage.success('操作成功')
+    fetchRoles()
   } catch (error) {
-    ElMessage.error('删除失败: ' + error.message)
   } finally {
     loading.value = false
   }

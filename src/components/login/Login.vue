@@ -190,10 +190,10 @@ body {
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import axios from 'axios'
 import { loadMenuAndRoutes } from '@/router'
+import service from '@/utils/request'
+import { ElMessage } from 'element-plus'
 
 const loginFormRef = ref(null)
 const router = useRouter()
@@ -223,33 +223,26 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
 
-    const response = await login(loginForm.value.username, loginForm.value.password)
-    if (response.code == 200) {
-      authStore.login(loginForm.value.username)
-      await loadMenuAndRoutes()
-      router.push('/home')
-      ElMessage.success('登录成功')
-    } else {
-      ElMessage.error(response.message || '用户名或密码错误')
-    }
+    await login(loginForm.value.username, loginForm.value.password)
+    authStore.login(loginForm.value.username)
+    await loadMenuAndRoutes()
+    router.push('/home')
+    ElMessage.success('登录成功')
   } catch (error) {
-    ElMessage.error('登录失败，请稍后重试')
-    console.error('登录错误:', error)
   } finally {
     loading.value = false
   }
 }
 
 const login = async (username, password) => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/login`, {
+    const response = await service.get('/api/login', {
       params: {
         name: username,
         password: password,
       },
     })
-    return response.data
+    return response
   } catch (error) {
     throw error
   }

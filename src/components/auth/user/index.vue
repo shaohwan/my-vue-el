@@ -84,10 +84,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import service from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 
 const users = ref([])
 const roles = ref([])
@@ -117,13 +115,9 @@ const rules = {
 const fetchUsers = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/user`)
-    if (response.data.code == 200) {
-      users.value = response.data.data
-    }
+    const response = await service.get('/api/user')
+    users.value = response
   } catch (error) {
-    console.error('获取用户失败:', error)
-    ElMessage.error('获取用户失败')
   } finally {
     loading.value = false
   }
@@ -131,14 +125,9 @@ const fetchUsers = async () => {
 
 const fetchRoles = async () => {
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/role`)
-    if (response.data.code == 200) {
-      roles.value = response.data.data
-    }
-  } catch (error) {
-    console.error('获取角色失败:', error)
-    ElMessage.error('获取角色失败')
-  }
+    const response = await service.get('/api/role')
+    roles.value = response
+  } catch (error) {}
 }
 
 const showAddDialog = () => {
@@ -159,25 +148,20 @@ const showAddDialog = () => {
 const showEditDialog = async (user) => {
   dialogTitle.value = '编辑用户'
   try {
-    const response = await axios.get(`${apiBaseUrl}/api/user/${user.id}`)
-    if (response.data.code == 200) {
-      const userData = response.data.data
-      form.value = {
-        id: userData.id,
-        username: userData.username,
-        password: '', // 编辑时不显示密码
-        realName: userData.realName,
-        email: userData.email || '',
-        phone: userData.phone || '',
-        enabled: userData.enabled,
-        roleIds: userData.roles.map((role) => role.id),
-      }
-      dialogVisible.value = true
+    const response = await service.get(`/api/user/${user.id}`)
+    const userData = response
+    form.value = {
+      id: userData.id,
+      username: userData.username,
+      password: '', // 编辑时不显示密码
+      realName: userData.realName,
+      email: userData.email || '',
+      phone: userData.phone || '',
+      enabled: userData.enabled,
+      roleIds: userData.roles.map((role) => role.id),
     }
-  } catch (error) {
-    console.error('获取用户详情失败:', error)
-    ElMessage.error('获取用户详情失败')
-  }
+    dialogVisible.value = true
+  } catch (error) {}
 }
 
 const saveUser = async () => {
@@ -188,18 +172,16 @@ const saveUser = async () => {
     if (!userData.id) {
       // 新增时包含密码
       delete userData.id
-      await axios.post(`${apiBaseUrl}/api/user`, userData)
-      ElMessage.success('保存成功')
+      await service.post('/api/user', userData)
     } else {
       // 编辑时不更新密码（除非有专门的修改密码功能）
       delete userData.password
-      await axios.put(`${apiBaseUrl}/api/user`, userData)
-      ElMessage.success('更新成功')
+      await service.put('/api/user', userData)
     }
+    ElMessage.success('操作成功')
     dialogVisible.value = false
     fetchUsers()
   } catch (error) {
-    ElMessage.error('保存失败: ' + (error.response?.data?.message || error.message))
   } finally {
     loading.value = false
   }
@@ -220,15 +202,10 @@ const confirmDelete = (id) => {
 const deleteUser = async (id) => {
   try {
     loading.value = true
-    const response = await axios.delete(`${apiBaseUrl}/api/user/${id}`)
-    if (response.data.code == 200) {
-      fetchUsers()
-      ElMessage.success(response.data.message || '删除成功')
-    } else {
-      ElMessage.error(response.data.message || '删除失败')
-    }
+    await service.delete(`/api/user/${id}`)
+    ElMessage.success('操作成功')
+    fetchUsers()
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '删除失败')
   } finally {
     loading.value = false
   }

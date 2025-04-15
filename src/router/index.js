@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import axios from 'axios'
+import service from '@/utils/request'
 
 // 路径转驼峰命名
 const pathToCamel = (path) => {
@@ -130,27 +130,22 @@ const collectPermissions = (menu) => {
 const loadMenuAndRoutes = async () => {
   try {
     const authStore = useAuthStore()
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-    const response = await axios.get(`${apiBaseUrl}/api/menu/tree`, {
+    const response = await service.get('/api/menu/tree', {
       params: { name: authStore.username || 'default' },
     })
-    if (response.data.code === 200) {
-      const data = Array.isArray(response.data.data) ? response.data.data : []
-      const normalizeMenu = (menu) => ({
-        ...menu,
-        url: menu.url ? menu.url.replace(/^\/+|\/+$/g, '') : '',
-        children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
-      })
-      const menuList = data.map(normalizeMenu)
-      const inferredBasePath =
-        response.data.basePath ||
-        menuList.find((menu) => menu.url && menu.url.trim())?.url ||
-        defaultBasePath
-      addDynamicRoutes(menuList, inferredBasePath)
-      return { menu: menuList, basePath: inferredBasePath }
-    }
-    console.warn('API 响应无效，返回空菜单')
-    return { menu: [], basePath: defaultBasePath }
+    const data = Array.isArray(response) ? response : []
+    const normalizeMenu = (menu) => ({
+      ...menu,
+      url: menu.url ? menu.url.replace(/^\/+|\/+$/g, '') : '',
+      children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
+    })
+    const menuList = data.map(normalizeMenu)
+    const inferredBasePath =
+      response.basePath ||
+      menuList.find((menu) => menu.url && menu.url.trim())?.url ||
+      defaultBasePath
+    addDynamicRoutes(menuList, inferredBasePath)
+    return { menu: menuList, basePath: inferredBasePath }
   } catch (error) {
     console.error('加载菜单和路由失败:', error)
     return { menu: [], basePath: defaultBasePath }
