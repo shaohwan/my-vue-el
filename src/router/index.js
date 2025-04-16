@@ -2,46 +2,22 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import service from '@/utils/request'
 
-// 路径转驼峰命名
-const pathToCamel = (path) => {
-  return path.replace(/\/(\w)/g, (all, letter) => letter.toUpperCase())
-}
+// 默认基路径
+const basePath = import.meta.env.VITE_BASE_PATH || '/home'
 
-// 动态组件加载工具函数
-const layoutModules = () => {
-  return import.meta.glob('/src/components/**/*.vue')
-}
-
+// 动态组件加载
+const layoutModules = import.meta.glob('/src/components/**/*.vue')
 const getDynamicComponent = (url) => {
-  const modules = layoutModules()
-  const normalizedUrl = url ? url.replace(/^\/+|\/+$/g, '') : ''
+  const normalizedUrl = url.replace(/^\/+|\/+$/g, '')
   const modulePath = `/src/components/${normalizedUrl}.vue`
-  if (modules[modulePath]) {
-    return modules[modulePath]
-  }
-  console.warn(`Component not found for URL: ${modulePath}`)
-  return null
+  return layoutModules[modulePath] || null
 }
 
-// 默认基路径（从环境变量获取，或兜底为 /home）
-const defaultBasePath = import.meta.env.VITE_BASE_PATH || '/home'
-
+// 静态路由
 const staticRoutes = [
-  {
-    path: '/login',
-    name: 'Login',
-    component: () => import('../components/login/Login.vue'),
-  },
-  {
-    path: '/',
-    redirect: defaultBasePath,
-  },
-  {
-    path: '/home',
-    name: 'Home',
-    component: () => import('../components/Home.vue'),
-    children: [],
-  },
+  { path: '/login', name: 'Login', component: () => import('../components/login/Login.vue') },
+  { path: '/', redirect: basePath },
+  { path: '/home', name: 'Home', component: () => import('../components/Home.vue'), children: [] },
 ]
 
 const router = createRouter({
@@ -50,19 +26,18 @@ const router = createRouter({
 })
 
 let isRoutesLoaded = false
-let basePath = defaultBasePath
+let currentBasePath = basePath
 
+// 路由守卫
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   if (!authStore.isLoggedIn && to.name !== 'Login') {
     next('/login')
   } else if (authStore.isLoggedIn && to.name === 'Login') {
-    next(basePath)
+    next(currentBasePath)
   } else if (authStore.isLoggedIn && !isRoutesLoaded) {
-    const menuData = await loadMenuAndRoutes()
-    if (menuData && menuData.basePath) {
-      basePath = menuData.basePath
-    }
+    const { basePath: newBasePath } = await loadMenuAndRoutes()
+    currentBasePath = newBasePath
     isRoutesLoaded = true
     next(to.path)
   } else {
@@ -70,86 +45,72 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 
-const addDynamicRoutes = (menuList, parentPath = basePath) => {
+// 添加动态路由
+const addDynamicRoutes = (menuList, parentPath = currentBasePath) => {
   const routes = generateRoutes(menuList, parentPath)
   routes.forEach((route) => {
-    try {
-      if (!router.hasRoute(route.name)) {
-        router.addRoute('Home', route)
-      }
-    } catch (error) {
-      console.error(`添加路由 ${route.path} 失败:`, error)
+    if (!router.hasRoute(route.name)) {
+      router.addRoute('Home', route)
     }
   })
-  console.log('当前路由表:', router.getRoutes())
 }
 
-const generateRoutes = (menuList, parentPath) => {
-  const routes = []
-  menuList.forEach((menu) => {
+// 生成路由
+const generateRoutes = (menuList, parentPath) =>
+  menuList.flatMap((menu) => {
     const permissions = collectPermissions(menu)
-    if (menu.type === 'MENU' && menu.url && menu.url.trim()) {
-      const url = menu.url.startsWith('/') ? menu.url.slice(1) : menu.url
+    const routes = []
+    if (menu.type === 'MENU' && menu.url?.trim()) {
+      const url = menu.url.replace(/^\/+|\/+$/g, '')
       const fullPath = `/${url}`
       const component = getDynamicComponent(url)
       if (component) {
         routes.push({
           path: fullPath,
-          name: pathToCamel(url),
+          name: url.replace(/\//g, ''),
           component,
-          meta: {
-            icon: menu.icon,
-            title: menu.name,
-            permissions,
-          },
+          meta: { icon: menu.icon, title: menu.name, permissions },
         })
-      } else {
-        console.warn(`Skipping route for ${url}: component not found`)
       }
     }
-    if (menu.children && menu.children.length > 0) {
+    if (menu.children?.length) {
       routes.push(...generateRoutes(menu.children, parentPath))
     }
+    return routes
   })
-  return routes
-}
 
+// 收集权限
 const collectPermissions = (menu) => {
-  const permissions = []
-  if (menu.code) {
-    permissions.push(menu.code)
-  }
-  if (menu.children && menu.children.length > 0) {
-    menu.children.forEach((child) => {
-      permissions.push(...collectPermissions(child))
-    })
+  const permissions = menu.code ? [menu.code] : []
+  if (menu.children?.length) {
+    permissions.push(...menu.children.flatMap(collectPermissions))
   }
   return [...new Set(permissions)]
 }
 
+// 加载菜单和路由
 const loadMenuAndRoutes = async () => {
+  const authStore = useAuthStore()
   try {
-    const authStore = useAuthStore()
     const response = await service.get('/api/menu/tree', {
       params: { name: authStore.username || 'default' },
     })
-    const data = Array.isArray(response) ? response : []
-    const normalizeMenu = (menu) => ({
+    const menuList = (Array.isArray(response) ? response : []).map((menu) => ({
       ...menu,
-      url: menu.url ? menu.url.replace(/^\/+|\/+$/g, '') : '',
-      children: menu.children && menu.children.length > 0 ? menu.children.map(normalizeMenu) : [],
-    })
-    const menuList = data.map(normalizeMenu)
-    const inferredBasePath =
-      response.basePath ||
-      menuList.find((menu) => menu.url && menu.url.trim())?.url ||
-      defaultBasePath
+      url: menu.url?.trim() || '',
+      children:
+        menu.children?.map((child) => ({
+          ...child,
+          url: child.url?.trim() || '',
+          children: child.children || [],
+        })) || [],
+    }))
+    const inferredBasePath = response.basePath || menuList.find((menu) => menu.url)?.url || basePath
     addDynamicRoutes(menuList, inferredBasePath)
     return { menu: menuList, basePath: inferredBasePath }
-  } catch (error) {
-    console.error('加载菜单和路由失败:', error)
-    return { menu: [], basePath: defaultBasePath }
+  } catch {
+    return { menu: [], basePath }
   }
 }
 
-export { router, addDynamicRoutes, loadMenuAndRoutes, basePath, pathToCamel }
+export { router, addDynamicRoutes, loadMenuAndRoutes, basePath }

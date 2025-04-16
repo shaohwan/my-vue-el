@@ -1,3 +1,4 @@
+<!-- login.vue -->
 <template>
   <div class="login-container">
     <div class="login-bg"></div>
@@ -5,7 +6,6 @@
       <el-form
         ref="loginFormRef"
         :model="loginForm"
-        :rules="loginRules"
         class="login-form"
         @submit.prevent="handleLogin"
       >
@@ -59,86 +59,68 @@
 </template>
 
 <style scoped>
-/* 重置全局样式，确保全屏 */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* 禁止页面滚动 */
-}
-
-* {
-  box-sizing: border-box; /* 确保 padding 不增加尺寸 */
+:root {
+  --primary-bg-color: #f5f7fa;
+  --gradient-start: #6a11cb;
+  --gradient-end: #2575fc;
+  --text-primary: #303133;
+  --text-secondary: #909399;
+  --spacing-sm: 15px;
+  --spacing-md: 20px;
+  --border-radius: 8px;
+  --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .login-container {
-  height: 100vh; /* 明确使用视口高度 */
-  width: 100vw; /* 明确使用视口宽度 */
-  position: fixed; /* 固定位置，避免受父级影响 */
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
   top: 0;
   left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f7fa;
-  overflow: hidden; /* 防止容器溢出 */
+  background-color: var(--primary-bg-color);
 }
 
 .login-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  inset: 0;
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
   opacity: 0.8;
-  z-index: 0;
 }
 
 .login-content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
-  max-width: 500px; /* 限制内容区域宽度 */
-  padding: 20px; /* 外边距 */
+  max-width: 420px;
+  padding: var(--spacing-md);
 }
 
 .login-form {
   width: 100%;
-  max-width: 420px;
   padding: 30px;
   background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  max-height: calc(100vh - 60px); /* 留出外边距空间 */
-  overflow-y: auto; /* 表单内部滚动 */
-}
-
-.login-form:hover {
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: var(--spacing-md);
 }
 
 .login-header .title {
   font-size: 24px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .login-header .subtitle {
   font-size: 14px;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .login-button {
@@ -152,36 +134,30 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 20px;
+  margin-top: var(--spacing-md);
   font-size: 14px;
 }
 
-/* Element Plus 样式调整 */
-.login-container:deep(.el-input__wrapper) {
-  padding: 0 15px;
+:deep(.el-input__wrapper) {
+  padding: 0 var(--spacing-sm);
   height: 48px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
 }
 
-.login-container:deep(.el-input__prefix) {
+:deep(.el-input__prefix) {
   display: flex;
   align-items: center;
   margin-right: 10px;
 }
 
-/* 响应式调整 */
 @media (max-height: 600px) {
   .login-form {
-    padding: 20px;
+    padding: var(--spacing-md);
     max-height: calc(100vh - 40px);
   }
-
-  .login-header {
-    margin-bottom: 15px;
-  }
-
+  .login-header,
   .login-footer {
-    margin-top: 15px;
+    margin: var(--spacing-sm) 0;
   }
 }
 </style>
@@ -193,7 +169,6 @@ import { useAuthStore } from '@/stores/auth'
 import { User, Lock } from '@element-plus/icons-vue'
 import { loadMenuAndRoutes } from '@/router'
 import service from '@/utils/request'
-import { ElMessage } from 'element-plus'
 
 const loginFormRef = ref(null)
 const router = useRouter()
@@ -207,44 +182,17 @@ const loginForm = ref({
 const rememberMe = ref(false)
 const loading = ref(false)
 
-const loginRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' },
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' },
-  ],
-}
-
 const handleLogin = async () => {
+  loading.value = true
   try {
-    await loginFormRef.value.validate()
-    loading.value = true
-
-    await login(loginForm.value.username, loginForm.value.password)
+    await service.get('/api/login', {
+      params: { name: loginForm.value.username, password: loginForm.value.password },
+    })
     authStore.login(loginForm.value.username)
     await loadMenuAndRoutes()
     router.push('/home')
-    ElMessage.success('登录成功')
-  } catch (error) {
   } finally {
     loading.value = false
-  }
-}
-
-const login = async (username, password) => {
-  try {
-    const response = await service.get('/api/login', {
-      params: {
-        name: username,
-        password: password,
-      },
-    })
-    return response
-  } catch (error) {
-    throw error
   }
 }
 </script>

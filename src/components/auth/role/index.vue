@@ -1,11 +1,10 @@
 <template>
   <div>
-    <el-card class="control-card">
+    <div class="control">
       <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增角色</el-button>
-    </el-card>
-
-    <el-card class="table-card">
-      <el-table :data="roles" style="width: 100%" v-loading="loading" class="custom-table">
+    </div>
+    <div class="table">
+      <el-table :data="roles" style="width: 100%" v-loading="loading">
         <el-table-column prop="name" label="角色名称" />
         <el-table-column prop="description" label="描述" />
         <el-table-column label="操作" width="200">
@@ -15,7 +14,6 @@
               size="small"
               @click="showEditDialog(row)"
               v-auth="'role:edit'"
-              class="action-button"
             >
               编辑
             </el-button>
@@ -24,56 +22,43 @@
               size="small"
               @click="confirmDelete(row.id)"
               v-auth="'role:delete'"
-              class="action-button"
             >
               删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
-    </el-card>
-
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="50%" class="custom-dialog">
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
-        <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入角色名称" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" :rows="4" />
-        </el-form-item>
-        <el-form-item label="权限选择">
-          <el-tree
-            ref="tree"
-            :data="permissionTree"
-            :props="treeProps"
-            show-checkbox
-            node-key="id"
-            :default-checked-keys="form.permissionIds"
-            default-expand-all
-            class="custom-tree"
-          >
-            <template #default="{ node, data }">
-              <div class="custom-tree-node">
-                <span class="node-label">{{ data.name }}</span>
-              </div>
-            </template>
-          </el-tree>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveRole">保存</el-button>
-      </template>
-    </el-dialog>
+    </div>
+    <add-or-update
+      :title="dialogTitle"
+      :form="form"
+      :permission-tree="permissionTree"
+      :tree-props="treeProps"
+      :visible="dialogVisible"
+      @update:visible="dialogVisible = $event"
+      @save="saveRole"
+    />
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import service from '@/utils/request'
-import { ElMessage, ElMessageBox } from 'element-plus'
+<style scoped>
+.control {
+  padding: 8px;
+}
+.table {
+  padding: 8px;
+}
+:deep(.el-table__cell) {
+  padding: 8px;
+  font-size: 14px;
+}
+</style>
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+<script setup>
+import { ref, onMounted } from 'vue'
+import service from '@/utils/request'
+import { ElMessageBox } from 'element-plus'
+import AddOrUpdate from './add-or-update.vue'
 
 const roles = ref([])
 const dialogVisible = ref(false)
@@ -86,235 +71,78 @@ const form = ref({
 })
 const permissionTree = ref([])
 const treeProps = { label: 'name', children: 'children' }
-const formRef = ref(null)
-const tree = ref(null)
-const rules = { name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }] }
 const loading = ref(false)
 
-const fetchRoles = async () => {
+const showDialog = (title, role = null) => {
+  dialogTitle.value = title
+  form.value = role
+    ? {
+        id: role.id,
+        name: role.name,
+        description: role.description || '',
+        permissionIds: role.permissionIds || [],
+      }
+    : {
+        id: null,
+        name: '',
+        description: '',
+        permissionIds: [],
+      }
+  dialogVisible.value = true
+}
+
+const showAddDialog = () => showDialog('新增角色')
+
+const showEditDialog = async (row) => {
   loading.value = true
   try {
-    const response = await service.get('/api/role')
-    roles.value = response
-  } catch (error) {
+    const role = await service.get(`/api/role/${row.id}`)
+    showDialog('编辑角色', role)
   } finally {
     loading.value = false
   }
 }
 
-const fetchPermissionTree = async () => {
+const saveRole = async (formData) => {
+  loading.value = true
   try {
-    const response = await service.get('/api/menu/tree')
-    permissionTree.value = response
-  } catch (error) {}
-}
-
-const showAddDialog = async () => {
-  dialogTitle.value = '新增角色'
-  form.value = { id: null, name: '', description: '', permissionIds: [] }
-  dialogVisible.value = true
-  await nextTick()
-  if (tree.value) {
-    tree.value.setCheckedKeys([]) // 清空权限树勾选状态
-  }
-}
-
-const showEditDialog = async (role) => {
-  dialogTitle.value = '编辑角色'
-  try {
-    const response = await service.get(`/api/role/${role.id}`)
-    const roleData = response
-    form.value = {
-      id: roleData.id,
-      name: roleData.name,
-      description: roleData.description || '',
-      permissionIds: roleData.permissionIds || [],
-    }
-    dialogVisible.value = true
-    await nextTick()
-    const leafIds = form.value.permissionIds.filter((id) => isLeafNode(id))
-    tree.value.setCheckedKeys(leafIds)
-  } catch (error) {}
-}
-
-const isLeafNode = (id) => {
-  const findNode = (nodes) => {
-    for (const node of nodes) {
-      if (node.id === id) {
-        return !node.children || node.children.length === 0
-      }
-      if (node.children) {
-        const found = findNode(node.children)
-        if (found !== null) return found
-      }
-    }
-    return null
-  }
-  return findNode(permissionTree.value)
-}
-
-const saveRole = async () => {
-  try {
-    await formRef.value.validate()
-    const checkedNodes = tree.value.getCheckedNodes(false, true) // 包括父节点和叶子节点
-    form.value.permissionIds = checkedNodes.map((node) => node.id)
-
-    loading.value = true
-    const data = { ...form.value }
+    const data = { ...formData }
     if (data.id) {
       await service.put('/api/role', data)
     } else {
       await service.post('/api/role', data)
     }
-    ElMessage.success('操作成功')
     dialogVisible.value = false
-    fetchRoles()
-  } catch (error) {
+    roles.value = await service.get('/api/role')
   } finally {
     loading.value = false
   }
 }
 
-const confirmDelete = (id) => {
+const confirmDelete = (id) =>
   ElMessageBox.confirm('确定要删除此角色吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
-  })
-    .then(() => deleteRole(id))
-    .catch(() => {
-      ElMessage.info('已取消删除')
-    })
-}
+  }).then(() => deleteRole(id))
 
 const deleteRole = async (id) => {
+  loading.value = true
   try {
-    loading.value = true
     await service.delete(`/api/role/${id}`)
-    ElMessage.success('操作成功')
-    fetchRoles()
-  } catch (error) {
+    roles.value = await service.get('/api/role')
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  fetchRoles()
-  fetchPermissionTree()
+onMounted(async () => {
+  loading.value = true
+  try {
+    roles.value = await service.get('/api/role')
+    permissionTree.value = await service.get('/api/menu/tree')
+  } finally {
+    loading.value = false
+  }
 })
 </script>
-
-<style scoped>
-/* Control Card */
-.control-card {
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.control-card:hover {
-  transform: translateY(-2px);
-}
-
-/* Table Card */
-.table-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Custom Table */
-.custom-table {
-  padding: 10px 0;
-  width: 100%;
-}
-
-:deep(.el-table__row) {
-  transition: background-color 0.2s;
-  border-bottom: 1px solid #e8ecef; /* 行分割线 */
-}
-
-:deep(.el-table__row:hover) {
-  background-color: #f5f7fa;
-}
-
-:deep(.el-table__cell) {
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #303133;
-}
-
-/* Action Buttons */
-.action-button {
-  transition: all 0.2s;
-}
-
-.action-button:hover {
-  transform: scale(1.05);
-}
-
-/* Tree */
-.custom-tree {
-  padding: 3px 0; /* 进一步减少整体padding */
-  width: 100%;
-}
-
-/* Tree Node */
-.custom-tree-node {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 4px 6px; /* 更紧凑的节点padding */
-  box-sizing: border-box;
-  background-color: #fff;
-  transition: background-color 0.2s;
-}
-
-.custom-tree-node:hover {
-  background-color: #f5f7fa;
-}
-
-.node-label {
-  font-size: 13px; /* 减小字体以适应紧凑布局 */
-  color: #303133;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Fix Element Plus Tree Indentation */
-:deep(.el-tree-node__content) {
-  height: auto;
-  padding: 0;
-  align-items: center;
-  line-height: 24px; /* 进一步减小行高 */
-}
-
-/* Dialog */
-.custom-dialog {
-  border-radius: 8px;
-}
-
-.custom-dialog :deep(.el-dialog__header) {
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #e8ecef;
-  padding: 16px 20px;
-  margin-bottom: 0;
-}
-
-.custom-dialog :deep(.el-dialog__body) {
-  padding: 20px;
-}
-
-.custom-dialog :deep(.el-form-item__label) {
-  font-weight: 500;
-  color: #303133;
-}
-
-.custom-dialog :deep(.el-button) {
-  border-radius: 6px;
-  padding: 10px 20px;
-}
-</style>

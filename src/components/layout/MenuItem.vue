@@ -1,58 +1,35 @@
+<!-- MenuItem.vue -->
 <template>
-  <el-menu-item
-    v-if="
-      menu.type === 'MENU' &&
-      (!menu.children || menu.children.length === 0) &&
-      menu.url &&
-      menu.url.trim()
-    "
-    :index="getMenuPath(menu.url)"
-  >
-    <el-icon v-if="menu.icon">
-      <component :is="menu.icon" />
-    </el-icon>
-    <span>{{ menu.name }}</span>
-  </el-menu-item>
-  <el-sub-menu
-    v-else-if="menu.type === 'MENU' && menu.children && menu.children.length > 0"
-    :index="getMenuIndex(menu)"
-  >
-    <template #title>
-      <el-icon v-if="menu.icon">
-        <component :is="menu.icon" />
-      </el-icon>
+  <div :style="{ '--level': level }">
+    <el-menu-item
+      v-if="menu.type === 'MENU' && !menu.children?.length"
+      :index="getMenuPath(menu.url)"
+      :class="`level-${level}`"
+    >
+      <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
       <span>{{ menu.name }}</span>
-    </template>
-    <menu-item v-for="child in menu.children" :key="child.id" :menu="child" :base-path="basePath" />
-  </el-sub-menu>
+    </el-menu-item>
+    <el-sub-menu
+      v-else-if="menu.type === 'MENU' && menu.children?.length"
+      :index="getMenuIndex(menu)"
+    >
+      <template #title>
+        <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
+        <span>{{ menu.name }}</span>
+      </template>
+      <menu-item v-for="child in menu.children" :key="child.id" :menu="child" :level="level + 1" />
+    </el-sub-menu>
+  </div>
 </template>
 
 <script setup>
-const props = defineProps({
-  menu: {
-    type: Object,
-    required: true,
-  },
-  basePath: {
-    type: String,
-    default: '/home',
-  },
+defineProps({
+  menu: { type: Object, required: true },
+  level: { type: Number, default: 0 },
 })
 
-const getMenuPath = (url) => {
-  if (!url || !url.trim()) return props.basePath
-  if (url.startsWith('/')) return url
-  return `/${url}`
-}
+const getMenuPath = (url) => (url?.trim() ? (url.startsWith('/') ? url : `/${url}`) : '/home')
 
-const getMenuIndex = (menu) => {
-  if (!menu.url || !menu.url.trim()) {
-    return `group-${menu.id || menu.name || 'unknown'}`
-  }
-  return getMenuPath(menu.url)
-}
+const getMenuIndex = (menu) =>
+  menu.url?.trim() ? getMenuPath(menu.url) : `group-${menu.id || menu.name || 'unknown'}`
 </script>
-
-<style scoped>
-/* No styles needed here, as styling is handled in Aside.vue */
-</style>
