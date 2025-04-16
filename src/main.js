@@ -15,7 +15,6 @@ app.directive('auth', {
   mounted(el, binding) {
     const requiredPermission = binding.value
     const routePermissions = router.currentRoute.value.meta.permissions || []
-    console.log('v-auth 检查:', requiredPermission, routePermissions)
     if (!routePermissions.includes(requiredPermission)) {
       el.style.display = 'none'
     }
@@ -23,7 +22,6 @@ app.directive('auth', {
   updated(el, binding) {
     const requiredPermission = binding.value
     const routePermissions = router.currentRoute.value.meta.permissions || []
-    console.log('v-auth 更新:', requiredPermission, routePermissions)
     el.style.display = routePermissions.includes(requiredPermission) ? '' : 'none'
   },
 })

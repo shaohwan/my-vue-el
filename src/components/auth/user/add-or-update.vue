@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :title="title" v-model="visible" width="50%">
+  <el-dialog :title="title" v-model="visible" width="50%" draggable>
     <el-form :model="formData" label-width="120px" :rules="rules" ref="formRef">
       <el-form-item label="用户名" prop="username">
         <el-input v-model="formData.username" placeholder="请输入用户名" />

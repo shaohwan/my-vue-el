@@ -1,4 +1,3 @@
-<!-- aside.vue -->
 <template>
   <el-aside width="220px" class="custom-aside">
     <el-menu

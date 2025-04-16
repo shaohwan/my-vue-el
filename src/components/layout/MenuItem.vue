@@ -1,4 +1,3 @@
-<!-- MenuItem.vue -->
 <template>
   <div :style="{ '--level': level }">
     <el-menu-item
