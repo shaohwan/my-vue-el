@@ -113,7 +113,6 @@ const permissionForm = ref({
   parentId: null,
   orderNum: 0,
 })
-const loading = ref(false)
 
 const showDialog = async (title, permission = null) => {
   dialogTitle.value = title
@@ -144,18 +143,11 @@ const showDialog = async (title, permission = null) => {
 const handleAdd = () => showDialog('新增权限')
 
 const handleEdit = async (data) => {
-  loading.value = true
-  try {
     const permission = await service.get(`/api/menu/${data.id}`)
     showDialog('编辑权限', permission)
-  } finally {
-    loading.value = false
-  }
 }
 
 const handleSave = async (formData) => {
-  loading.value = true
-  try {
     const data = { ...formData }
     if (data.type === 'MENU') {
       delete data.code
@@ -167,9 +159,6 @@ const handleSave = async (formData) => {
     }
     dialogVisible.value = false
     fetchPermissionTree()
-  } finally {
-    loading.value = false
-  }
 }
 
 const handleDelete = (data) =>
@@ -184,24 +173,14 @@ const handleDelete = (data) =>
   ).then(() => deletePermission(data.id))
 
 const deletePermission = async (id) => {
-  loading.value = true
-  try {
     await service.delete(`/api/menu/${id}`)
     fetchPermissionTree()
-  } finally {
-    loading.value = false
-  }
 }
 
 const fetchPermissionTree = async () => {
-  loading.value = true
-  try {
     const response = await service.get('/api/menu/tree')
     permissionTree.value = response
     menuTree.value = filterMenuTree(response)
-  } finally {
-    loading.value = false
-  }
 }
 
 const filterMenuTree = (tree) => {

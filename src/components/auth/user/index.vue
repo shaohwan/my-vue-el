@@ -4,7 +4,7 @@
       <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增用户</el-button>
     </div>
     <div class="table">
-      <el-table :data="users" style="width: 100%" v-loading="loading">
+      <el-table :data="users" style="width: 100%">
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="realName" label="真实姓名" />
         <el-table-column prop="email" label="邮箱" />
@@ -83,7 +83,6 @@ const form = ref({
   enabled: true,
   roleIds: [],
 })
-const loading = ref(false)
 
 const showDialog = (title, user = null) => {
   dialogTitle.value = title
@@ -114,32 +113,22 @@ const showDialog = (title, user = null) => {
 const showAddDialog = () => showDialog('新增用户')
 
 const showEditDialog = async (row) => {
-  loading.value = true
-  try {
-    const user = await service.get(`/api/user/${row.id}`)
-    showDialog('编辑用户', user)
-  } finally {
-    loading.value = false
-  }
+  const user = await service.get(`/api/user/${row.id}`)
+  showDialog('编辑用户', user)
 }
 
 const saveUser = async (formData) => {
-  loading.value = true
-  try {
-    if (!formData.id) {
-      const userData = { ...formData }
-      delete userData.id
-      await service.post('/api/user', userData)
-    } else {
-      const userData = { ...formData }
-      delete userData.password
-      await service.put('/api/user', userData)
-    }
-    dialogVisible.value = false
-    users.value = await service.get('/api/user')
-  } finally {
-    loading.value = false
+  if (!formData.id) {
+    const userData = { ...formData }
+    delete userData.id
+    await service.post('/api/user', userData)
+  } else {
+    const userData = { ...formData }
+    delete userData.password
+    await service.put('/api/user', userData)
   }
+  dialogVisible.value = false
+  users.value = await service.get('/api/user')
 }
 
 const confirmDelete = (id) =>
@@ -150,22 +139,12 @@ const confirmDelete = (id) =>
   }).then(() => deleteUser(id))
 
 const deleteUser = async (id) => {
-  loading.value = true
-  try {
-    await service.delete(`/api/user/${id}`)
-    users.value = await service.get('/api/user')
-  } finally {
-    loading.value = false
-  }
+  await service.delete(`/api/user/${id}`)
+  users.value = await service.get('/api/user')
 }
 
 onMounted(async () => {
-  loading.value = true
-  try {
-    users.value = await service.get('/api/user')
-    roles.value = await service.get('/api/role')
-  } finally {
-    loading.value = false
-  }
+  users.value = await service.get('/api/user')
+  roles.value = await service.get('/api/role')
 })
 </script>

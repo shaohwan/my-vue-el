@@ -4,7 +4,7 @@
       <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增角色</el-button>
     </div>
     <div class="table">
-      <el-table :data="roles" style="width: 100%" v-loading="loading">
+      <el-table :data="roles" style="width: 100%">
         <el-table-column prop="name" label="角色名称" />
         <el-table-column prop="description" label="描述" />
         <el-table-column prop="createTime" label="创建时间" />
@@ -72,7 +72,6 @@ const form = ref({
 })
 const permissionTree = ref([])
 const treeProps = { label: 'name', children: 'children' }
-const loading = ref(false)
 
 const showDialog = (title, role = null) => {
   dialogTitle.value = title
@@ -95,18 +94,11 @@ const showDialog = (title, role = null) => {
 const showAddDialog = () => showDialog('新增角色')
 
 const showEditDialog = async (row) => {
-  loading.value = true
-  try {
     const role = await service.get(`/api/role/${row.id}`)
     showDialog('编辑角色', role)
-  } finally {
-    loading.value = false
-  }
 }
 
 const saveRole = async (formData) => {
-  loading.value = true
-  try {
     const data = { ...formData }
     if (data.id) {
       await service.put('/api/role', data)
@@ -115,9 +107,6 @@ const saveRole = async (formData) => {
     }
     dialogVisible.value = false
     roles.value = await service.get('/api/role')
-  } finally {
-    loading.value = false
-  }
 }
 
 const confirmDelete = (id) =>
@@ -128,22 +117,12 @@ const confirmDelete = (id) =>
   }).then(() => deleteRole(id))
 
 const deleteRole = async (id) => {
-  loading.value = true
-  try {
     await service.delete(`/api/role/${id}`)
     roles.value = await service.get('/api/role')
-  } finally {
-    loading.value = false
-  }
 }
 
 onMounted(async () => {
-  loading.value = true
-  try {
     roles.value = await service.get('/api/role')
     permissionTree.value = await service.get('/api/menu/tree')
-  } finally {
-    loading.value = false
-  }
 })
 </script>

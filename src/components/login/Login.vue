@@ -39,7 +39,6 @@
         <el-form-item>
           <el-button
             type="primary"
-            :loading="loading"
             @click="handleLogin"
             class="login-button"
             size="large"
@@ -179,19 +178,13 @@ const loginForm = ref({
 })
 
 const rememberMe = ref(false)
-const loading = ref(false)
 
 const handleLogin = async () => {
-  loading.value = true
-  try {
     await service.get('/api/login', {
       params: { name: loginForm.value.username, password: loginForm.value.password },
     })
     authStore.login(loginForm.value.username)
     await loadMenuAndRoutes()
     router.push('/home')
-  } finally {
-    loading.value = false
-  }
 }
 </script>
