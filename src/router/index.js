@@ -15,9 +15,9 @@ const getDynamicComponent = (url) => {
 
 // 静态路由
 const staticRoutes = [
-  { path: '/login', name: 'Login', component: () => import('../components/login/Login.vue') },
+  { path: '/login', name: 'Login', component: () => import('@/components/login/Login.vue') },
   { path: '/', redirect: basePath },
-  { path: '/home', name: 'Home', component: () => import('../components/Home.vue'), children: [] },
+  { path: '/home', name: 'Home', component: () => import('@/components/Home.vue'), children: [] },
 ]
 
 const router = createRouter({
