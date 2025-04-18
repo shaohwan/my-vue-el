@@ -143,22 +143,22 @@ const showDialog = async (title, permission = null) => {
 const handleAdd = () => showDialog('新增权限')
 
 const handleEdit = async (data) => {
-    const permission = await service.get(`/api/menu/${data.id}`)
-    showDialog('编辑权限', permission)
+  const permission = await service.get(`/api/menu/${data.id}`)
+  showDialog('编辑权限', permission)
 }
 
 const handleSave = async (formData) => {
-    const data = { ...formData }
-    if (data.type === 'MENU') {
-      delete data.code
-    }
-    if (data.id) {
-      await service.put('/api/menu', data)
-    } else {
-      await service.post('/api/menu', data)
-    }
-    dialogVisible.value = false
-    fetchPermissionTree()
+  const data = { ...formData }
+  if (data.type === 'MENU') {
+    delete data.code
+  }
+  if (data.id) {
+    await service.put('/api/menu', data)
+  } else {
+    await service.post('/api/menu', data)
+  }
+  dialogVisible.value = false
+  fetchPermissionTree()
 }
 
 const handleDelete = (data) =>
@@ -173,14 +173,14 @@ const handleDelete = (data) =>
   ).then(() => deletePermission(data.id))
 
 const deletePermission = async (id) => {
-    await service.delete(`/api/menu/${id}`)
-    fetchPermissionTree()
+  await service.delete(`/api/menu/${id}`)
+  fetchPermissionTree()
 }
 
 const fetchPermissionTree = async () => {
-    const response = await service.get('/api/menu/tree')
-    permissionTree.value = response
-    menuTree.value = filterMenuTree(response)
+  const response = await service.get('/api/menu/tree')
+  permissionTree.value = response
+  menuTree.value = filterMenuTree(response)
 }
 
 const filterMenuTree = (tree) => {

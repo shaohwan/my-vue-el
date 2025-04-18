@@ -37,12 +37,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            @click="handleLogin"
-            class="login-button"
-            size="large"
-          >
+          <el-button type="primary" @click="handleLogin" class="login-button" size="large">
             登 录
           </el-button>
         </el-form-item>
@@ -180,11 +175,11 @@ const loginForm = ref({
 const rememberMe = ref(false)
 
 const handleLogin = async () => {
-    await service.get('/api/login', {
-      params: { name: loginForm.value.username, password: loginForm.value.password },
-    })
-    authStore.login(loginForm.value.username)
-    await loadMenuAndRoutes()
-    router.push('/home')
+  await service.get('/api/login', {
+    params: { name: loginForm.value.username, password: loginForm.value.password },
+  })
+  authStore.login(loginForm.value.username)
+  await loadMenuAndRoutes()
+  router.push('/home')
 }
 </script>

@@ -94,19 +94,19 @@ const showDialog = (title, role = null) => {
 const showAddDialog = () => showDialog('新增角色')
 
 const showEditDialog = async (row) => {
-    const role = await service.get(`/api/role/${row.id}`)
-    showDialog('编辑角色', role)
+  const role = await service.get(`/api/role/${row.id}`)
+  showDialog('编辑角色', role)
 }
 
 const saveRole = async (formData) => {
-    const data = { ...formData }
-    if (data.id) {
-      await service.put('/api/role', data)
-    } else {
-      await service.post('/api/role', data)
-    }
-    dialogVisible.value = false
-    roles.value = await service.get('/api/role')
+  const data = { ...formData }
+  if (data.id) {
+    await service.put('/api/role', data)
+  } else {
+    await service.post('/api/role', data)
+  }
+  dialogVisible.value = false
+  roles.value = await service.get('/api/role')
 }
 
 const confirmDelete = (id) =>
@@ -117,12 +117,12 @@ const confirmDelete = (id) =>
   }).then(() => deleteRole(id))
 
 const deleteRole = async (id) => {
-    await service.delete(`/api/role/${id}`)
-    roles.value = await service.get('/api/role')
+  await service.delete(`/api/role/${id}`)
+  roles.value = await service.get('/api/role')
 }
 
 onMounted(async () => {
-    roles.value = await service.get('/api/role')
-    permissionTree.value = await service.get('/api/menu/tree')
+  roles.value = await service.get('/api/role')
+  permissionTree.value = await service.get('/api/menu/tree')
 })
 </script>

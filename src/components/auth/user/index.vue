@@ -4,7 +4,7 @@
       <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增用户</el-button>
     </div>
     <div class="table">
-      <el-table :data="users" style="width: 100%">
+      <el-table :data="users" style="width: 100%" row-key="id">
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="realName" label="真实姓名" />
         <el-table-column prop="email" label="邮箱" />
@@ -38,6 +38,16 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        style="display: flex; justify-content: flex-end; margin-top: 20px"
+      />
     </div>
     <add-or-update
       :title="dialogTitle"
@@ -83,6 +93,9 @@ const form = ref({
   enabled: true,
   roleIds: [],
 })
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const showDialog = (title, user = null) => {
   dialogTitle.value = title
@@ -95,7 +108,7 @@ const showDialog = (title, user = null) => {
         email: user.email || '',
         phone: user.phone || '',
         enabled: user.enabled,
-        roleIds: user.roles.map((role) => role.id),
+        roleIds: user.roles ? user.roles.map((role) => role.id) : [],
       }
     : {
         id: null,
@@ -128,7 +141,8 @@ const saveUser = async (formData) => {
     await service.put('/api/user', userData)
   }
   dialogVisible.value = false
-  users.value = await service.get('/api/user')
+  currentPage.value = 1 // 重置到第一页以显示最新数据
+  await fetchUsers()
 }
 
 const confirmDelete = (id) =>
@@ -140,11 +154,33 @@ const confirmDelete = (id) =>
 
 const deleteUser = async (id) => {
   await service.delete(`/api/user/${id}`)
-  users.value = await service.get('/api/user')
+  await fetchUsers()
+}
+
+const fetchUsers = async () => {
+  const response = await service.get('/api/user', {
+    params: {
+      page: currentPage.value - 1, // 0-based page for backend
+      size: pageSize.value,
+    },
+  })
+  users.value = response.content
+  total.value = response.page.totalElements
+}
+
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  currentPage.value = 1
+  fetchUsers()
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  fetchUsers()
 }
 
 onMounted(async () => {
-  users.value = await service.get('/api/user')
+  await fetchUsers()
   roles.value = await service.get('/api/role')
 })
 </script>
