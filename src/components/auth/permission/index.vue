@@ -1,10 +1,18 @@
 <template>
   <div>
     <div class="control">
-      <el-button type="success" @click="handleAdd" v-auth="'permission:add'">新增权限</el-button>
+      <el-button type="success" @click="handleAdd" v-auth="'permission:add'">新增</el-button>
+      <el-button type="primary" @click="toggleExpand">
+        {{ isAllExpanded ? '全部收起' : '全部展开' }}
+        <el-icon class="icon">
+          <ArrowUp v-if="isAllExpanded" />
+          <ArrowDown v-else />
+        </el-icon>
+      </el-button>
     </div>
     <div class="table">
       <el-table
+        ref="tableRef"
         :data="permissionTree"
         row-key="id"
         default-expand-all
@@ -91,12 +99,19 @@
 .custom-table :deep(.el-table__row:hover) {
   background-color: #f5f7fa;
 }
+:deep(.el-button + .el-button) {
+  margin-left: 8px; /* 按钮间距 */
+}
+.icon {
+  margin-left: 4px; /* 图标与文本间距 */
+}
 </style>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import service from '@/utils/request'
 import { ElMessageBox } from 'element-plus'
+import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import AddOrUpdate from './add-or-update.vue'
 
 const permissionTree = ref([])
@@ -113,6 +128,8 @@ const permissionForm = ref({
   parentId: null,
   orderNum: 0,
 })
+const tableRef = ref(null)
+const isAllExpanded = ref(true)
 
 const showDialog = async (title, permission = null) => {
   dialogTitle.value = title
@@ -190,6 +207,13 @@ const filterMenuTree = (tree) => {
       ...node,
       children: node.children ? filterMenuTree(node.children) : [],
     }))
+}
+
+const toggleExpand = () => {
+  isAllExpanded.value = !isAllExpanded.value
+  permissionTree.value.forEach((row) => {
+    tableRef.value.toggleRowExpansion(row, isAllExpanded.value)
+  })
 }
 
 onMounted(() => {

@@ -24,6 +24,7 @@
 }
 .content-container {
   flex: 1;
+  overflow: hidden;
 }
 .main-footer-container {
   flex: 1;

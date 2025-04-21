@@ -3,18 +3,10 @@
     <div class="search">
       <el-form :inline="true" :model="queryForm" @submit.prevent="handleSearch">
         <el-form-item label="用户名">
-          <el-input
-            v-model="queryForm.username"
-            placeholder="请输入用户名"
-            @clear="handleSearch"
-          />
+          <el-input v-model="queryForm.username" placeholder="请输入用户名" @clear="handleSearch" />
         </el-form-item>
         <el-form-item label="邮箱">
-          <el-input
-            v-model="queryForm.email"
-            placeholder="请输入邮箱"
-            @clear="handleSearch"
-          />
+          <el-input v-model="queryForm.email" placeholder="请输入邮箱" @clear="handleSearch" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
