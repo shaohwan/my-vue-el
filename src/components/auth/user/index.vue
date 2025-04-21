@@ -1,7 +1,27 @@
 <template>
   <div>
-    <div class="control">
-      <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增用户</el-button>
+    <div class="search">
+      <el-form :inline="true" :model="queryForm" @submit.prevent="handleSearch">
+        <el-form-item label="用户名">
+          <el-input
+            v-model="queryForm.username"
+            placeholder="请输入用户名"
+            @clear="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input
+            v-model="queryForm.email"
+            placeholder="请输入邮箱"
+            @clear="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="resetForm">重置</el-button>
+          <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增</el-button>
+        </el-form-item>
+      </el-form>
     </div>
     <div class="table">
       <el-table :data="users" style="width: 100%" row-key="id">
@@ -61,7 +81,7 @@
 </template>
 
 <style scoped>
-.control {
+.search {
   padding: 8px;
 }
 .table {
@@ -70,6 +90,9 @@
 :deep(.el-table__cell) {
   padding: 8px;
   font-size: 14px;
+}
+:deep(.el-form-item) {
+  margin-right: 16px;
 }
 </style>
 
@@ -96,6 +119,10 @@ const form = ref({
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const queryForm = ref({
+  username: '',
+  email: '',
+})
 
 const showDialog = (title, user = null) => {
   dialogTitle.value = title
@@ -162,10 +189,23 @@ const fetchUsers = async () => {
     params: {
       page: currentPage.value - 1, // 0-based page for backend
       size: pageSize.value,
+      username: queryForm.value.username || null,
+      email: queryForm.value.email || null,
     },
   })
   users.value = response.content
   total.value = response.page.totalElements
+}
+
+const handleSearch = () => {
+  currentPage.value = 1 // 重置到第一页
+  fetchUsers()
+}
+
+const resetForm = () => {
+  queryForm.value = { username: '', email: '' }
+  currentPage.value = 1
+  fetchUsers()
 }
 
 const handleSizeChange = (val) => {
