@@ -175,10 +175,11 @@ const loginForm = ref({
 const rememberMe = ref(false)
 
 const handleLogin = async () => {
-  await service.get('/api/login', {
-    params: { name: loginForm.value.username, password: loginForm.value.password },
+  const response = await service.post('/api/auth/login', {
+    username: loginForm.value.username,
+    password: loginForm.value.password,
   })
-  authStore.login(loginForm.value.username)
+  authStore.login(response.username, response.accessToken, response.refreshToken)
   await loadMenuAndRoutes()
   router.push('/home')
 }

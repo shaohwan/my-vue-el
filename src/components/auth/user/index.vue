@@ -9,8 +9,8 @@
           <el-input v-model="queryForm.email" placeholder="请输入邮箱" @clear="handleSearch" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="resetForm">重置</el-button>
+          <el-button type="primary" @click="handleSearch" v-auth="'user:search'">搜索</el-button>
+          <el-button @click="resetForm" v-auth="'user:reset'">重置</el-button>
           <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增</el-button>
         </el-form-item>
       </el-form>
@@ -213,6 +213,7 @@ const handleCurrentChange = (val) => {
 
 onMounted(async () => {
   await fetchUsers()
-  roles.value = await service.get('/api/role')
+  const response = await service.get('/api/role')
+  roles.value = response.content
 })
 </script>

@@ -6,8 +6,8 @@
           <el-input v-model="queryForm.name" placeholder="请输入角色名称" @clear="handleSearch" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="resetForm">重置</el-button>
+          <el-button type="primary" @click="handleSearch" v-auth="'role:search'">搜索</el-button>
+          <el-button @click="resetForm" v-auth="'role:reset'">重置</el-button>
           <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增</el-button>
         </el-form-item>
       </el-form>
