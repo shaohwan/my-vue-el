@@ -147,7 +147,7 @@ const confirmDelete = (id) =>
 
 const deleteRole = async (id) => {
   await service.delete(`/api/role/${id}`)
-  roles.value = await service.get('/api/role')
+  fetchRoles()
 }
 
 const fetchRoles = async () => {

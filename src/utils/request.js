@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 // 常量
@@ -49,13 +49,24 @@ service.interceptors.response.use(
         error.config.headers['Authorization'] = `Bearer ${authStore.accessToken}`
         return service(error.config)
       } catch (refreshError) {
-        ElMessage.error('登录已过期，请重新登录')
-        authStore.logout()
-        window.location.href = '/login'
-        return Promise.reject(refreshError)
+        ElMessageBox.confirm('登录已过期，请重新登录', '提示', {
+          confirmButtonText: '重新登录',
+          type: 'warning',
+          showCancelButton: false,
+          closeOnClickModal: false,
+          showClose: false,
+        })
+          .then(() => {
+            authStore.logout()
+            window.location.href = '/login'
+          })
+          .catch(() => {
+            // 用户取消，不做任何操作
+          })
+        return Promise.reject('登录超时，请重新登录')
       }
     }
-    ElMessage.error(error.response?.data?.message || ERROR_MESSAGE)
+    ElMessage.error(errorMessage)
     return Promise.reject(error)
   },
 )
