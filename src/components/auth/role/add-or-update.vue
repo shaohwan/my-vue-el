@@ -20,8 +20,8 @@
           show-checkbox
           node-key="id"
           :default-checked-keys="formData.permissionIds"
-          default-expand-all
           class="custom-tree"
+          accordion
         >
           <template #default="{ node, data }">
             <div class="custom-tree-node">
@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -63,13 +63,21 @@ watch(
   () => props.visible,
   async (val) => {
     visible.value = val
-    if (val && tree.value) {
+    if (val) {
       await nextTick()
-      const leafIds = formData.value.permissionIds.filter((id) => isLeafNode(id))
-      tree.value.setCheckedKeys(leafIds)
+      // 确保在树组件完全渲染后设置选中状态
+      if (tree.value) {
+        // 先重置选中状态
+        tree.value.setCheckedKeys([])
+        // 然后设置正确的选中状态
+        const leafIds = getLeafNodeIds(props.permissionTree, formData.value.permissionIds)
+        tree.value.setCheckedKeys(leafIds)
+      }
     }
   },
+  { immediate: true },
 )
+
 watch(visible, (val) => {
   emit('update:visible', val)
 })
@@ -80,20 +88,36 @@ watch(
   (val) => {
     formData.value = { ...val }
   },
+  { deep: true, immediate: true },
 )
 
-const isLeafNode = (id) => {
-  const findNode = (nodes) => {
-    for (const node of nodes) {
-      if (node.id === id) return !node.children || node.children.length === 0
-      if (node.children) {
-        const found = findNode(node.children)
-        if (found !== null) return found
+// 获取所有叶子节点ID
+const getLeafNodeIds = (treeData, checkedIds) => {
+  const leafIds = []
+
+  const traverse = (nodes) => {
+    nodes.forEach((node) => {
+      // 如果当前节点在已选ID中且是叶子节点，或者它的子节点都不在已选ID中
+      if (checkedIds.includes(node.id) && (!node.children || node.children.length === 0)) {
+        leafIds.push(node.id)
+      } else if (node.children) {
+        // 检查子节点是否有被选中的
+        const hasCheckedChild = node.children.some((child) => checkedIds.includes(child.id))
+        if (hasCheckedChild) {
+          traverse(node.children)
+        } else if (checkedIds.includes(node.id)) {
+          // 当前节点被选中但没有子节点被选中（可能是父节点被直接选中）
+          leafIds.push(node.id)
+        }
+      } else if (checkedIds.includes(node.id)) {
+        // 当前节点被选中但没有子节点
+        leafIds.push(node.id)
       }
-    }
-    return null
+    })
   }
-  return findNode(props.permissionTree)
+
+  traverse(treeData)
+  return leafIds
 }
 
 // 保存表单
@@ -103,4 +127,16 @@ const save = async () => {
   formData.value.permissionIds = checkedNodes.map((node) => node.id)
   emit('save', formData.value)
 }
+
+// 初始化时设置一次
+onMounted(() => {
+  if (props.visible) {
+    nextTick(() => {
+      if (tree.value) {
+        const leafIds = getLeafNodeIds(props.permissionTree, formData.value.permissionIds)
+        tree.value.setCheckedKeys(leafIds)
+      }
+    })
+  }
+})
 </script>
