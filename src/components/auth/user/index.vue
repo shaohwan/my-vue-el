@@ -12,11 +12,26 @@
           <el-button type="primary" @click="handleSearch" v-auth="'user:search'">搜索</el-button>
           <el-button @click="resetForm" v-auth="'user:reset'">重置</el-button>
           <el-button type="primary" @click="showAddDialog" v-auth="'user:add'">新增</el-button>
+          <el-button
+            type="danger"
+            :disabled="selectedRows.length === 0"
+            @click="handleBatchDelete"
+            v-auth="'user:delete'"
+          >
+            批量删除
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
     <div class="table">
-      <el-table :data="users" style="width: 100%" row-key="id">
+      <el-table
+        :data="users"
+        style="width: 100%"
+        row-key="id"
+        border
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="realName" label="真实姓名" />
         <el-table-column prop="email" label="邮箱" />
@@ -86,12 +101,15 @@
 :deep(.el-form-item) {
   margin-right: 16px;
 }
+:deep(.el-button + .el-button) {
+  margin-left: 8px; /* 按钮间距 */
+}
 </style>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import service from '@/utils/request'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import AddOrUpdate from './add-or-update.vue'
 
 const users = ref([])
@@ -115,6 +133,7 @@ const queryForm = ref({
   username: '',
   email: '',
 })
+const selectedRows = ref([])
 
 const showDialog = (title, user = null) => {
   dialogTitle.value = title
@@ -161,6 +180,7 @@ const saveUser = async (formData) => {
   }
   dialogVisible.value = false
   currentPage.value = 1 // 重置到第一页以显示最新数据
+  selectedRows.value = [] // 清空选中状态
   await fetchUsers()
 }
 
@@ -172,8 +192,42 @@ const confirmDelete = (id) =>
   }).then(() => deleteUser(id))
 
 const deleteUser = async (id) => {
-  await service.delete(`/api/user/${id}`)
-  await fetchUsers()
+  try {
+    await service.delete('/api/user', { data: [id] })
+    selectedRows.value = [] // 清空选中状态
+    await fetchUsers()
+    ElMessage.success('删除成功')
+  } catch (error) {
+    ElMessage.error('删除失败，请重试')
+  }
+}
+
+const handleSelectionChange = (val) => {
+  selectedRows.value = val
+}
+
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择要删除的用户')
+    return
+  }
+  const usernames = selectedRows.value.map((row) => row.username).join(', ')
+  ElMessageBox.confirm(`确定删除以下用户吗？${usernames}`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    try {
+      const ids = selectedRows.value.map((row) => row.id)
+      await service.delete('/api/user', { data: ids })
+      ElMessage.success('批量删除成功')
+      selectedRows.value = []
+      currentPage.value = 1 // 重置到第一页
+      await fetchUsers()
+    } catch (error) {
+      ElMessage.error('批量删除失败，请重试')
+    }
+  })
 }
 
 const fetchUsers = async () => {
@@ -191,23 +245,27 @@ const fetchUsers = async () => {
 
 const handleSearch = () => {
   currentPage.value = 1 // 重置到第一页
+  selectedRows.value = [] // 清空选中状态
   fetchUsers()
 }
 
 const resetForm = () => {
   queryForm.value = { username: '', email: '' }
   currentPage.value = 1
+  selectedRows.value = [] // 清空选中状态
   fetchUsers()
 }
 
 const handleSizeChange = (val) => {
   pageSize.value = val
   currentPage.value = 1
+  selectedRows.value = [] // 清空选中状态
   fetchUsers()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
+  selectedRows.value = [] // 清空选中状态
   fetchUsers()
 }
 

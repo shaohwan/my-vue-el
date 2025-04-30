@@ -15,9 +15,9 @@
         ref="tableRef"
         :data="permissionTree"
         row-key="id"
-        default-expand-all
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         class="custom-table"
+        border
       >
         <el-table-column label="名称">
           <template #default="{ row }">

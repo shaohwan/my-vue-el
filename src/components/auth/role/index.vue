@@ -9,11 +9,20 @@
           <el-button type="primary" @click="handleSearch" v-auth="'role:search'">搜索</el-button>
           <el-button @click="resetForm" v-auth="'role:reset'">重置</el-button>
           <el-button type="primary" @click="showAddDialog" v-auth="'role:add'">新增</el-button>
+          <el-button
+            type="danger"
+            :disabled="selectedRows.length === 0"
+            @click="handleBatchDelete"
+            v-auth="'role:delete'"
+          >
+            批量删除
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
     <div class="table">
-      <el-table :data="roles" style="width: 100%">
+      <el-table :data="roles" style="width: 100%" border @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="角色名称" />
         <el-table-column prop="description" label="描述" />
         <el-table-column prop="createTime" label="创建时间" />
@@ -75,12 +84,15 @@
 :deep(.el-form-item) {
   margin-right: 16px;
 }
+:deep(.el-button + .el-button) {
+  margin-left: 8px; /* 按钮间距 */
+}
 </style>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import service from '@/utils/request'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import AddOrUpdate from './add-or-update.vue'
 
 const roles = ref([])
@@ -100,6 +112,7 @@ const total = ref(0)
 const queryForm = ref({
   name: '',
 })
+const selectedRows = ref([])
 
 const showDialog = (title, role = null) => {
   dialogTitle.value = title
@@ -135,6 +148,7 @@ const saveRole = async (formData) => {
   }
   dialogVisible.value = false
   currentPage.value = 1 // 重置到第一页以显示最新数据
+  selectedRows.value = [] // 清空选中状态
   await fetchRoles()
 }
 
@@ -146,8 +160,42 @@ const confirmDelete = (id) =>
   }).then(() => deleteRole(id))
 
 const deleteRole = async (id) => {
-  await service.delete(`/api/role/${id}`)
-  fetchRoles()
+  try {
+    await service.delete('/api/role', { data: [id] })
+    selectedRows.value = [] // 清空选中状态
+    await fetchRoles()
+    ElMessage.success('删除成功')
+  } catch (error) {
+    ElMessage.error('删除失败，请重试')
+  }
+}
+
+const handleSelectionChange = (val) => {
+  selectedRows.value = val
+}
+
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择要删除的角色')
+    return
+  }
+  const names = selectedRows.value.map((row) => row.name).join(', ')
+  ElMessageBox.confirm(`确定删除以下角色吗？${names}`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    try {
+      const ids = selectedRows.value.map((row) => row.id)
+      await service.delete('/api/role', { data: ids })
+      ElMessage.success('批量删除成功')
+      selectedRows.value = []
+      currentPage.value = 1 // 重置到第一页
+      await fetchRoles()
+    } catch (error) {
+      ElMessage.error('批量删除失败，请重试')
+    }
+  })
 }
 
 const fetchRoles = async () => {
@@ -164,23 +212,27 @@ const fetchRoles = async () => {
 
 const handleSearch = () => {
   currentPage.value = 1 // 重置到第一页
+  selectedRows.value = [] // 清空选中状态
   fetchRoles()
 }
 
 const resetForm = () => {
   queryForm.value = { name: '' }
   currentPage.value = 1
+  selectedRows.value = [] // 清空选中状态
   fetchRoles()
 }
 
 const handleSizeChange = (val) => {
   pageSize.value = val
   currentPage.value = 1
+  selectedRows.value = [] // 清空选中状态
   fetchRoles()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
+  selectedRows.value = [] // 清空选中状态
   fetchRoles()
 }
 
