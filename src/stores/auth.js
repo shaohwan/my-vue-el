@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import service from '@/utils/request'
+import { resetRoutes } from '@/router'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -68,6 +69,7 @@ export const useAuthStore = defineStore('auth', {
       sessionStorage.removeItem('username')
       sessionStorage.removeItem('accessToken')
       sessionStorage.removeItem('refreshToken')
+      resetRoutes()
     },
   },
 })

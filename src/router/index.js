@@ -36,14 +36,36 @@ router.beforeEach(async (to, from, next) => {
   } else if (authStore.isLoggedIn && to.name === 'Login') {
     next(currentBasePath)
   } else if (authStore.isLoggedIn && !isRoutesLoaded) {
-    const { basePath: newBasePath } = await loadMenuAndRoutes()
+    const { basePath: newBasePath, defaultRoute } = await loadMenuAndRoutes()
     currentBasePath = newBasePath
     isRoutesLoaded = true
-    next(to.path)
+    // 如果访问 /home，导航到默认菜单
+    if (to.path === '/home' && defaultRoute) {
+      next(defaultRoute)
+    } else {
+      next(to.path)
+    }
   } else {
     next()
   }
 })
+
+// 重置路由状态
+const resetRoutes = () => {
+  isRoutesLoaded = false
+  // 移除动态路由，恢复 /home 的 children 为空
+  const homeRoute = router.getRoutes().find((route) => route.name === 'Home')
+  if (homeRoute) {
+    homeRoute.children = []
+    // 重新添加静态路由以确保路由表一致
+    router.getRoutes().forEach((route) => {
+      if (route.name !== 'Home' && route.name !== 'Login' && route.path !== '/') {
+        router.removeRoute(route.name)
+      }
+    })
+    router.addRoute(staticRoutes.find((route) => route.name === 'Home'))
+  }
+}
 
 // 添加动态路由
 const addDynamicRoutes = (menuList, parentPath = currentBasePath) => {
@@ -88,6 +110,21 @@ const collectPermissions = (menu) => {
   return [...new Set(permissions)]
 }
 
+// 查找第一个有效菜单
+const findFirstValidMenu = (menuList) => {
+  for (const menu of menuList) {
+    if (menu.type === 'MENU' && menu.url?.trim()) {
+      const url = menu.url.replace(/^\/+|\/+$/g, '')
+      return `/${url}`
+    }
+    if (menu.children?.length) {
+      const childRoute = findFirstValidMenu(menu.children)
+      if (childRoute) return childRoute
+    }
+  }
+  return null
+}
+
 // 加载菜单和路由
 const loadMenuAndRoutes = async () => {
   const authStore = useAuthStore()
@@ -107,10 +144,11 @@ const loadMenuAndRoutes = async () => {
     }))
     const inferredBasePath = response.basePath || menuList.find((menu) => menu.url)?.url || basePath
     addDynamicRoutes(menuList, inferredBasePath)
-    return { menu: menuList, basePath: inferredBasePath }
+    const defaultRoute = findFirstValidMenu(menuList)
+    return { menu: menuList, basePath: inferredBasePath, defaultRoute }
   } catch {
-    return { menu: [], basePath }
+    return { menu: [], basePath, defaultRoute: null }
   }
 }
 
-export { router, addDynamicRoutes, loadMenuAndRoutes, basePath }
+export { router, addDynamicRoutes, loadMenuAndRoutes, basePath, resetRoutes }

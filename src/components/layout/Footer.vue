@@ -1,5 +1,5 @@
 <template>
-  <el-footer class="custom-footer">© 2025 管理系统 | Powered by xAI</el-footer>
+  <el-footer class="custom-footer">© 2025 管理系统 | Powered by daniel</el-footer>
 </template>
 
 <style scoped>
