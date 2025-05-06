@@ -156,12 +156,13 @@
 </style>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { User, Lock } from '@element-plus/icons-vue'
 import { loadMenuAndRoutes } from '@/router'
 import service from '@/utils/request'
+import { ElMessage } from 'element-plus'
 
 const loginFormRef = ref(null)
 const router = useRouter()
@@ -175,12 +176,17 @@ const loginForm = ref({
 const rememberMe = ref(false)
 
 const handleLogin = async () => {
+  const valid = await loginFormRef.value.validate().catch(() => false)
+  if (!valid) return
+
   const response = await service.post('/api/auth/login', {
     username: loginForm.value.username,
     password: loginForm.value.password,
+    rememberMe: rememberMe.value,
   })
-  authStore.login(response.username, response.accessToken, response.refreshToken)
+  authStore.login(response.username, response.accessToken, response.refreshToken, rememberMe.value)
   await loadMenuAndRoutes()
   router.push('/home')
+  ElMessage.success('登录成功')
 }
 </script>

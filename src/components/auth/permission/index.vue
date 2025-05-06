@@ -129,7 +129,7 @@ const permissionForm = ref({
   orderNum: 0,
 })
 const tableRef = ref(null)
-const isAllExpanded = ref(true)
+const isAllExpanded = ref(false)
 
 const showDialog = async (title, permission = null) => {
   dialogTitle.value = title
@@ -211,9 +211,15 @@ const filterMenuTree = (tree) => {
 
 const toggleExpand = () => {
   isAllExpanded.value = !isAllExpanded.value
-  permissionTree.value.forEach((row) => {
-    tableRef.value.toggleRowExpansion(row, isAllExpanded.value)
-  })
+  const toggleAllRows = (rows, expand) => {
+    rows.forEach((row) => {
+      tableRef.value.toggleRowExpansion(row, expand)
+      if (row.children && row.children.length > 0) {
+        toggleAllRows(row.children, expand)
+      }
+    })
+  }
+  toggleAllRows(permissionTree.value, isAllExpanded.value)
 }
 
 onMounted(() => {
