@@ -2,7 +2,7 @@
   <el-dialog :title="title" v-model="visible" width="50%" draggable>
     <el-form :model="formData" label-width="120px" :rules="rules" ref="formRef">
       <el-form-item label="用户名" prop="username">
-        <el-input v-model="formData.username" placeholder="请输入用户名" />
+        <el-input v-model="formData.username" placeholder="请输入用户名" :disabled="formData.id" />
       </el-form-item>
       <el-form-item label="密码" prop="password" v-if="!formData.id">
         <el-input
