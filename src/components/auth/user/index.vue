@@ -220,12 +220,12 @@ const handleBatchDelete = () => {
     try {
       const ids = selectedRows.value.map((row) => row.id)
       await service.delete('/api/user', { data: ids })
-      ElMessage.success('批量删除成功')
+      ElMessage.success('删除成功')
+    } finally {
+      // 不论成功或失败，都刷新界面
       selectedRows.value = []
       currentPage.value = 1 // 重置到第一页
       await fetchUsers()
-    } catch (error) {
-      ElMessage.error('批量删除失败，请重试')
     }
   })
 }
