@@ -65,7 +65,7 @@ const filteredMenuList = computed(() => {
   const filterMenus = (menus) => {
     if (!Array.isArray(menus)) return []
     return menus
-      .filter((menu) => menu.type === 'MENU')
+      .filter((menu) => menu.type === 0)
       .map((menu) => ({
         ...menu,
         icon: menu.icon || null,

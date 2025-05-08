@@ -1,17 +1,14 @@
 <template>
   <div :style="{ '--level': level }">
     <el-menu-item
-      v-if="menu.type === 'MENU' && !menu.children?.length"
+      v-if="menu.type === 0 && !menu.children?.length"
       :index="getMenuPath(menu.url)"
       :class="`level-${level}`"
     >
       <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
       <span>{{ menu.name }}</span>
     </el-menu-item>
-    <el-sub-menu
-      v-else-if="menu.type === 'MENU' && menu.children?.length"
-      :index="getMenuIndex(menu)"
-    >
+    <el-sub-menu v-else-if="menu.type === 0 && menu.children?.length" :index="getMenuIndex(menu)">
       <template #title>
         <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
         <span>{{ menu.name }}</span>

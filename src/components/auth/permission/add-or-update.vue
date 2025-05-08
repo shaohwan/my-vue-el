@@ -4,19 +4,19 @@
       <el-form-item label="权限名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入权限名称" />
       </el-form-item>
-      <el-form-item label="权限编码" prop="code" v-if="formData.type === 'BUTTON'">
-        <el-input v-model="formData.code" placeholder="请输入权限编码" />
-      </el-form-item>
       <el-form-item label="类型" prop="type">
         <el-select v-model="formData.type" placeholder="请选择类型" @change="handleTypeChange">
-          <el-option label="菜单" value="MENU" />
-          <el-option label="按钮" value="BUTTON" />
+          <el-option label="菜单" :value="0" />
+          <el-option label="按钮" :value="1" />
         </el-select>
       </el-form-item>
-      <el-form-item label="路径" v-if="formData.type === 'MENU'">
+      <el-form-item label="路径" v-if="formData.type === 0">
         <el-input v-model="formData.url" placeholder="请输入路径" />
       </el-form-item>
-      <el-form-item label="图标" v-if="formData.type === 'MENU'">
+      <el-form-item label="权限编码" prop="code" v-if="formData.type === 1">
+        <el-input v-model="formData.code" placeholder="请输入权限编码" />
+      </el-form-item>
+      <el-form-item label="图标" v-if="formData.type === 0">
         <el-input v-model="formData.icon" placeholder="请输入图标类名" />
       </el-form-item>
       <el-form-item label="父权限" prop="parentId">
@@ -60,7 +60,7 @@ const rules = {
   code: [
     {
       validator: (rule, value, callback) => {
-        if (formData.value.type === 'BUTTON' && (!value || value.trim() === '')) {
+        if (formData.value.type === 1 && (!value || value.trim() === '')) {
           callback(new Error('按钮权限必须输入权限编码'))
         } else {
           callback()
@@ -93,10 +93,10 @@ watch(
 )
 
 const handleTypeChange = (type) => {
-  if (type === 'BUTTON') {
+  if (type === 1) {
     formData.value.url = ''
     formData.value.icon = ''
-  } else if (type === 'MENU') {
+  } else if (type === 0) {
     formData.value.code = ''
   }
   formData.value.parentId = null

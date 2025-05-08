@@ -28,8 +28,8 @@
         </el-table-column>
         <el-table-column label="类型" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.type === 'MENU' ? 'success' : 'primary'" size="small">
-              {{ row.type === 'MENU' ? '菜单' : '按钮' }}
+            <el-tag :type="row.type === 0 ? 'success' : 'primary'" size="small">
+              {{ row.type === 0 ? '菜单' : '按钮' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -122,7 +122,7 @@ const permissionForm = ref({
   id: null,
   name: '',
   code: '',
-  type: 'MENU',
+  type: 0, // 默认值为 0（MENU）
   url: '',
   icon: '',
   parentId: null,
@@ -148,7 +148,7 @@ const showDialog = async (title, permission = null) => {
         id: null,
         name: '',
         code: '',
-        type: 'MENU',
+        type: 0,
         url: '',
         icon: '',
         parentId: null,
@@ -166,7 +166,7 @@ const handleEdit = async (data) => {
 
 const handleSave = async (formData) => {
   const data = { ...formData }
-  if (data.type === 'MENU') {
+  if (data.type === 0) {
     delete data.code
   }
   if (data.id) {
@@ -202,7 +202,7 @@ const fetchPermissionTree = async () => {
 
 const filterMenuTree = (tree) => {
   return tree
-    .filter((node) => node.type === 'MENU')
+    .filter((node) => node.type === 0)
     .map((node) => ({
       ...node,
       children: node.children ? filterMenuTree(node.children) : [],

@@ -82,7 +82,7 @@ const generateRoutes = (menuList, parentPath) =>
   menuList.flatMap((menu) => {
     const permissions = collectPermissions(menu)
     const routes = []
-    if (menu.type === 'MENU' && menu.url?.trim()) {
+    if (menu.type === 0 && menu.url?.trim()) {
       const url = menu.url.replace(/^\/+|\/+$/g, '')
       const fullPath = `/${url}`
       const component = getDynamicComponent(url)
@@ -113,7 +113,7 @@ const collectPermissions = (menu) => {
 // 查找第一个有效菜单
 const findFirstValidMenu = (menuList) => {
   for (const menu of menuList) {
-    if (menu.type === 'MENU' && menu.url?.trim()) {
+    if (menu.type === 0 && menu.url?.trim()) {
       const url = menu.url.replace(/^\/+|\/+$/g, '')
       return `/${url}`
     }
