@@ -43,11 +43,13 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import service from '@/utils/request'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const handleLogout = () => {
+  service.post('/api/auth/logout', { username: authStore.username })
   authStore.logout()
   router.push('/login')
 }
