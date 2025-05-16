@@ -66,16 +66,16 @@
         <el-table-column label="操作" width="180">
           <template #default="{ row }">
             <el-button
-              type="text"
-              class="text-blue-500"
+              type="primary"
+              size="small"
               @click="handleDownload(row)"
               v-auth="'file:download'"
             >
               下载
             </el-button>
             <el-button
-              type="text"
-              class="ml-2 text-red-500"
+              type="danger"
+              size="small"
               @click="confirmDelete(row)"
               v-auth="'file:delete'"
             >
@@ -120,15 +120,6 @@
 }
 :deep(.el-pagination .el-input) {
   width: 80px;
-}
-.ml-2 {
-  margin-left: 8px;
-}
-.text-red-500 {
-  color: #f56c6c;
-}
-.text-blue-500 {
-  color: #409eff;
 }
 </style>
 
