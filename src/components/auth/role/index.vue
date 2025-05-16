@@ -160,14 +160,10 @@ const confirmDelete = (id) =>
   }).then(() => deleteRole(id))
 
 const deleteRole = async (id) => {
-  try {
-    await service.delete('/api/role', { data: [id] })
-    selectedRows.value = [] // 清空选中状态
-    await fetchRoles()
-    ElMessage.success('删除成功')
-  } catch (error) {
-    ElMessage.error('删除失败，请重试')
-  }
+  await service.delete('/api/role', { data: [id] })
+  selectedRows.value = [] // 清空选中状态
+  await fetchRoles()
+  ElMessage.success('删除成功')
 }
 
 const handleSelectionChange = (val) => {

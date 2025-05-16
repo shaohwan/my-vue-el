@@ -192,14 +192,10 @@ const confirmDelete = (id) =>
   }).then(() => deleteUser(id))
 
 const deleteUser = async (id) => {
-  try {
-    await service.delete('/api/user', { data: [id] })
-    selectedRows.value = [] // 清空选中状态
-    await fetchUsers()
-    ElMessage.success('删除成功')
-  } catch (error) {
-    ElMessage.error('删除失败，请重试')
-  }
+  await service.delete('/api/user', { data: [id] })
+  selectedRows.value = [] // 清空选中状态
+  await fetchUsers()
+  ElMessage.success('删除成功')
 }
 
 const handleSelectionChange = (val) => {

@@ -55,6 +55,13 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response) => {
+    // 检查是否为文件流响应
+    if (
+      response.config.responseType === 'blob' ||
+      response.headers['content-type']?.includes('application/octet-stream')
+    ) {
+      return response // 返回完整 response，包含 headers 和 data
+    }
     const { data } = response
     if (data.code === SUCCESS_CODE) {
       return data.data

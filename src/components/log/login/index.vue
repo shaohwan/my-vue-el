@@ -78,7 +78,6 @@
 <script setup>
 import { ref } from 'vue'
 import service from '@/utils/request'
-import { ElMessage } from 'element-plus'
 
 const logs = ref([])
 const currentPage = ref(1)
@@ -89,19 +88,15 @@ const queryForm = ref({
 })
 
 const fetchLogs = async () => {
-  try {
-    const response = await service.get('/api/log/login', {
-      params: {
-        page: currentPage.value - 1, // 0-based page for backend
-        size: pageSize.value,
-        username: queryForm.value.username || null,
-      },
-    })
-    logs.value = response.content
-    total.value = response.page.totalElements
-  } catch (error) {
-    ElMessage.error('获取登录日志失败，请重试')
-  }
+  const response = await service.get('/api/log/login', {
+    params: {
+      page: currentPage.value - 1, // 0-based page for backend
+      size: pageSize.value,
+      username: queryForm.value.username || null,
+    },
+  })
+  logs.value = response.content
+  total.value = response.page.totalElements
 }
 
 const handleSearch = () => {
