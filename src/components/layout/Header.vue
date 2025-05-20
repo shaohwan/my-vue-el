@@ -103,25 +103,34 @@ const handleDropdownCommand = (command) => {
   if (command === 'changePassword') {
     showChangePasswordDialog()
   } else if (command === 'logout') {
-    handleLogout()
+    handleLogout(true) // 手动退出需要确认
   }
 }
 
 // 退出登录
-const handleLogout = () => {
-  ElMessageBox.confirm(`是否确认退出当前用户 ${authStore.username}？`, '退出确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      service.post('/api/auth/logout', { username: authStore.username })
-      authStore.logout()
-      router.push('/login')
+const handleLogout = (withConfirm = false) => {
+  if (withConfirm) {
+    ElMessageBox.confirm(`是否确认退出当前用户 ${authStore.username}？`, '退出确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     })
-    .catch(() => {
-      // 用户取消退出
-    })
+      .then(() => {
+        performLogout()
+      })
+      .catch(() => {
+        // 用户取消退出
+      })
+  } else {
+    performLogout()
+  }
+}
+
+// 执行退出登录逻辑
+const performLogout = () => {
+  service.post('/api/auth/logout', { username: authStore.username })
+  authStore.logout()
+  router.push('/login')
 }
 
 // 修改密码对话框
@@ -135,9 +144,7 @@ const passwordForm = reactive({
 
 const passwordRules = {
   oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
-  newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-  ],
+  newPassword: [{ required: true, message: '请输入新密码', trigger: 'blur' }],
   confirmPassword: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
     {
@@ -172,9 +179,11 @@ const submitChangePassword = () => {
           newPassword: passwordForm.newPassword,
         })
         .then(() => {
-          ElMessage.success('密码修改成功')
+          ElMessage.success('密码修改成功，请重新登录')
           dialogVisible.value = false
           passwordFormRef.value.resetFields()
+          // 强制退出登录，无需确认
+          handleLogout(false)
         })
     }
   })
