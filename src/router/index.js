@@ -39,7 +39,6 @@ router.beforeEach(async (to, from, next) => {
     const { basePath: newBasePath, defaultRoute } = await loadMenuAndRoutes()
     currentBasePath = newBasePath
     isRoutesLoaded = true
-    // 如果访问 /home，导航到默认菜单
     if (to.path === '/home' && defaultRoute) {
       next(defaultRoute)
     } else {
@@ -53,11 +52,9 @@ router.beforeEach(async (to, from, next) => {
 // 重置路由状态
 const resetRoutes = () => {
   isRoutesLoaded = false
-  // 移除动态路由，恢复 /home 的 children 为空
   const homeRoute = router.getRoutes().find((route) => route.name === 'Home')
   if (homeRoute) {
     homeRoute.children = []
-    // 重新添加静态路由以确保路由表一致
     router.getRoutes().forEach((route) => {
       if (route.name !== 'Home' && route.name !== 'Login' && route.path !== '/') {
         router.removeRoute(route.name)
@@ -78,7 +75,7 @@ const addDynamicRoutes = (menuList, parentPath = currentBasePath) => {
 }
 
 // 生成路由
-const generateRoutes = (menuList, parentPath) =>
+const generateRoutes = (menuList, parentPath, parentBreadcrumb = []) =>
   menuList.flatMap((menu) => {
     const permissions = collectPermissions(menu)
     const routes = []
@@ -87,16 +84,26 @@ const generateRoutes = (menuList, parentPath) =>
       const fullPath = `/${url}`
       const component = getDynamicComponent(url)
       if (component) {
+        // 构建面包屑，包含父级和当前菜单
+        const breadcrumb = [...parentBreadcrumb, { title: menu.name, path: fullPath }]
         routes.push({
           path: fullPath,
           name: url.replace(/\//g, ''),
           component,
-          meta: { icon: menu.icon, title: menu.name, permissions },
+          meta: { icon: menu.icon, title: menu.name, permissions, breadcrumb },
         })
       }
     }
     if (menu.children?.length) {
-      routes.push(...generateRoutes(menu.children, parentPath))
+      // 始终将当前菜单加入面包屑，即使没有 URL，path 设为 ''（不可点击）
+      const newParentBreadcrumb = [
+        ...parentBreadcrumb,
+        {
+          title: menu.name,
+          path: menu.url?.trim() ? `/${menu.url.replace(/^\/+|\/+$/g, '')}` : '',
+        },
+      ]
+      routes.push(...generateRoutes(menu.children, parentPath, newParentBreadcrumb))
     }
     return routes
   })

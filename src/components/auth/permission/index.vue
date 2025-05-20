@@ -33,6 +33,11 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="排序" align="center">
+          <template #default="{ row }">
+            {{ row.orderNum ?? '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="标识" align="center">
           <template #default="{ row }">
             {{ row.code || '-' }}

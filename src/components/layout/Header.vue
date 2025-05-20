@@ -5,7 +5,8 @@
       <div class="user-menu" v-if="authStore.isLoggedIn">
         <el-dropdown trigger="click" @command="handleDropdownCommand">
           <span class="user-trigger">
-            你好，{{ authStore.username }} <i class="el-icon-arrow-down"></i>
+            <span class="avatar-circle">{{ getFirstLetter(authStore.username) }}</span>
+            <i class="el-icon-arrow-down"></i>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
@@ -86,6 +87,18 @@
 .el-icon-arrow-down {
   font-size: 12px;
 }
+.avatar-circle {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  background-color: #409eff; /* 蓝色背景，可根据需要调整 */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
 </style>
 
 <script setup>
@@ -97,6 +110,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+// 获取用户名首字母并转换为大写
+const getFirstLetter = (username) => {
+  return username ? username.charAt(0).toUpperCase() : ''
+}
 
 // 下拉菜单处理
 const handleDropdownCommand = (command) => {
@@ -179,7 +197,7 @@ const submitChangePassword = () => {
           newPassword: passwordForm.newPassword,
         })
         .then(() => {
-          ElMessage.success('密码修改成功，请重新登录')
+          ElMessage.success('密码修改成功，即将退出登录')
           dialogVisible.value = false
           passwordFormRef.value.resetFields()
           // 强制退出登录，无需确认

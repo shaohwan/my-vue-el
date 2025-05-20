@@ -1,5 +1,7 @@
 <template>
   <el-main class="custom-main">
+    <Breadcrumb />
+    <el-divider border-style="double" />
     <router-view />
   </el-main>
 </template>
@@ -10,9 +12,12 @@
   display: flex;
   flex-direction: column;
 }
+
 :deep(.router-view) {
   flex: 1;
 }
 </style>
 
-<script setup></script>
+<script setup>
+import Breadcrumb from './Breadcrumb.vue'
+</script>
