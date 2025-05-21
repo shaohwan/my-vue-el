@@ -10,6 +10,7 @@
           </span>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item command="profile">个人中心</el-dropdown-item>
               <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
               <el-dropdown-item command="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -118,10 +119,12 @@ const getFirstLetter = (username) => {
 
 // 下拉菜单处理
 const handleDropdownCommand = (command) => {
-  if (command === 'changePassword') {
+  if (command === 'profile') {
+    router.push('/home/profile')
+  } else if (command === 'changePassword') {
     showChangePasswordDialog()
   } else if (command === 'logout') {
-    handleLogout(true) // 手动退出需要确认
+    handleLogout(true)
   }
 }
 

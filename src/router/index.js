@@ -17,7 +17,22 @@ const getDynamicComponent = (url) => {
 const staticRoutes = [
   { path: '/login', name: 'Login', component: () => import('@/components/login/Login.vue') },
   { path: '/', redirect: basePath },
-  { path: '/home', name: 'Home', component: () => import('@/components/Home.vue'), children: [] },
+  {
+    path: '/home',
+    name: 'Home',
+    component: () => import('@/components/Home.vue'),
+    children: [
+      {
+        path: 'profile', // 改为相对路径，实际路由为 /home/profile
+        name: 'Profile',
+        component: () => import('@/components/profile/index.vue'),
+        meta: {
+          title: '个人中心',
+          breadcrumb: [{ title: '个人中心', path: '/home/profile' }],
+        },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({
