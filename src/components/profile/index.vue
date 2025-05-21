@@ -234,7 +234,7 @@ const updateUserProfile = async () => {
     // avatar: user.value.avatar,
   }
   await service.put('/api/user/profile', updateData)
-  ElMessage.success('用户信息更新成功')
+  ElMessage.success('个人信息更新成功')
 }
 
 // 页面加载时获取数据

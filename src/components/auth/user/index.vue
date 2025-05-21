@@ -20,6 +20,7 @@
           >
             批量删除
           </el-button>
+          <el-button type="success" @click="exportToExcel" v-auth="'user:export'">导出</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -263,6 +264,31 @@ const handleCurrentChange = (val) => {
   currentPage.value = val
   selectedRows.value = [] // 清空选中状态
   fetchUsers()
+}
+
+const exportToExcel = async () => {
+  const response = await service.get('/api/user/export', {
+    responseType: 'blob',
+  })
+  const blob = new Blob([response.data], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  // Extract filename from Content-Disposition, fallback to default
+  let fileName = response.headers['content-disposition'].split('=')[1]
+  const contentDisposition = response.headers['content-disposition']
+  if (contentDisposition) {
+    const fileNameMatch = contentDisposition.match(/filename\*=UTF-8''(.+?)(;|$)/)
+    if (fileNameMatch && fileNameMatch[1]) {
+      fileName = decodeURIComponent(fileNameMatch[1])
+    }
+  }
+  link.download = fileName
+  link.click()
+  window.URL.revokeObjectURL(url)
+  ElMessage.success('导出成功')
 }
 
 onMounted(async () => {
