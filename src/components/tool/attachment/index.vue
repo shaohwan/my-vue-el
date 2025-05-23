@@ -211,20 +211,11 @@ const handleDownload = async (row) => {
   const response = await service.get(`/api/file/download/${row.id}`, {
     responseType: 'blob',
   })
-  const contentDisposition = response.headers['content-disposition']
-  let filename = row.name
-  if (contentDisposition) {
-    const filenameMatch =
-      contentDisposition.match(/filename\*=UTF-8''(.+)/) ||
-      contentDisposition.match(/filename="(.+)"/)
-    if (filenameMatch) {
-      filename = decodeURIComponent(filenameMatch[1])
-    }
-  }
+  const filename = row.name || `file_${row.id}`
   const url = window.URL.createObjectURL(new Blob([response.data]))
   const link = document.createElement('a')
   link.href = url
-  link.setAttribute('download', filename)
+  link.download = filename
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

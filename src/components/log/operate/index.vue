@@ -168,7 +168,7 @@ const queryForm = ref({
   status: null,
 })
 const detailVisible = ref(false)
-const selectedLogId = ref(null)
+const selectedLogId = ref(0)
 
 const fetchLogs = async () => {
   const response = await service.get('/api/log/operate', {

@@ -10,6 +10,9 @@
             >搜索</el-button
           >
           <el-button @click="resetForm" v-auth="'log:login:reset'">重置</el-button>
+          <el-button type="success" @click="exportToExcel" v-auth="'log:login:export'"
+            >导出</el-button
+          >
         </el-form-item>
       </el-form>
     </div>
@@ -119,6 +122,29 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   currentPage.value = val
   fetchLogs()
+}
+
+const exportToExcel = async () => {
+  const response = await service.get('/api/log/login/export', {
+    responseType: 'blob',
+  })
+  const contentDisposition = response.headers['content-disposition']
+  const fileName = contentDisposition
+    ? decodeURIComponent(
+        contentDisposition.match(/filename\*=utf-8''(.+)/)?.[1] || 'log_login_excel.xlsx',
+      )
+    : 'log_login_excel.xlsx'
+  const blob = new Blob([response.data], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  window.URL.revokeObjectURL(url)
+  link.remove()
+  ElMessage.success('导出成功')
 }
 
 fetchLogs()
