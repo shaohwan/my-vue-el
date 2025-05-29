@@ -108,7 +108,7 @@ watch(dialogVisible, (newVal) => {
 const fetchLogDetail = async () => {
   log.value = null // 清空数据，显示加载中
   const response = await service.get(`/api/schedule/log/${props.logId}`)
-  log.value = response.data || response
+  log.value = response
 }
 
 const handleClose = () => {
