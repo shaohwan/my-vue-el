@@ -1,53 +1,44 @@
 <template>
-  <el-dialog title="日志详情" v-model="dialogVisible" width="600px" :before-close="handleClose">
+  <el-dialog title="任务日志详情" v-model="dialogVisible" width="600px" :before-close="handleClose">
     <el-descriptions v-if="log" :column="2" border>
       <el-descriptions-item label="日志ID">{{ log.id }}</el-descriptions-item>
-      <el-descriptions-item label="用户名">{{ log.username }}</el-descriptions-item>
-      <el-descriptions-item label="IP">{{ log.ip }}</el-descriptions-item>
-      <el-descriptions-item label="操作名">{{ log.name }}</el-descriptions-item>
-      <el-descriptions-item label="模块名">{{ log.module }}</el-descriptions-item>
-      <el-descriptions-item label="请求URI">{{ log.requestUri }}</el-descriptions-item>
-      <el-descriptions-item label="请求方法">{{ log.requestMethod }}</el-descriptions-item>
-      <el-descriptions-item label="登录地点">{{ log.address }}</el-descriptions-item>
-      <el-descriptions-item label="操作类型">
-        <el-tag
-          :type="
-            log.type === 1
-              ? 'success'
-              : log.type === 2
-                ? 'info'
-                : log.type === 3
-                  ? 'warning'
-                  : 'danger'
-          "
-        >
-          {{ log.type === 1 ? '新增' : log.type === 2 ? '修改' : log.type === 3 ? '删除' : '其它' }}
-        </el-tag>
+      <el-descriptions-item label="任务ID">{{ log.jobId }}</el-descriptions-item>
+      <el-descriptions-item label="任务名称">{{ log.jobName }}</el-descriptions-item>
+      <el-descriptions-item label="任务组名">
+        {{
+          log.jobGroup.toLowerCase() === 'default'
+            ? '默认'
+            : log.jobGroup.toLowerCase() === 'system'
+              ? '系统'
+              : log.jobGroup
+        }}
       </el-descriptions-item>
-      <el-descriptions-item label="执行时长">{{ log.duration }}ms</el-descriptions-item>
-      <el-descriptions-item label="操作状态">
+      <el-descriptions-item label="Bean名称">{{ log.beanName }}</el-descriptions-item>
+      <el-descriptions-item label="方法名称">{{ log.method }}</el-descriptions-item>
+      <el-descriptions-item label="执行时长">{{ log.times }}ms</el-descriptions-item>
+      <el-descriptions-item label="执行时间">{{ log.createTime }}</el-descriptions-item>
+      <el-descriptions-item label="任务状态">
         <el-tag :type="log.status === 1 ? 'success' : 'danger'">
           {{ log.status === 1 ? '成功' : '失败' }}
         </el-tag>
       </el-descriptions-item>
-      <el-descriptions-item label="创建时间">{{ log.createTime }}</el-descriptions-item>
-      <el-descriptions-item label="请求参数" :span="2">
+      <el-descriptions-item label="方法参数" :span="2">
         <el-input
           type="textarea"
-          :value="log.requestParameters"
+          :value="log.params"
           :rows="4"
           readonly
-          placeholder="无请求参数"
+          placeholder="无参数"
           class="params-textarea"
         />
       </el-descriptions-item>
-      <el-descriptions-item label="用户代理" :span="2">
+      <el-descriptions-item label="错误信息" :span="2">
         <el-input
           type="textarea"
-          :value="log.userAgent"
+          :value="log.error"
           :rows="4"
           readonly
-          placeholder="无用户代理"
+          placeholder="无错误信息"
           class="params-textarea"
         />
       </el-descriptions-item>
@@ -116,8 +107,8 @@ watch(dialogVisible, (newVal) => {
 
 const fetchLogDetail = async () => {
   log.value = null // 清空数据，显示加载中
-  const response = await service.get(`/api/log/operate/${props.logId}`)
-  log.value = response
+  const response = await service.get(`/api/schedule/log/${props.logId}`)
+  log.value = response.data || response
 }
 
 const handleClose = () => {

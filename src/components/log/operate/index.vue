@@ -128,9 +128,6 @@
 .search {
   padding: 8px;
 }
-.table {
-  padding: 8px;
-}
 :deep(.el-table__cell) {
   padding: 8px;
   font-size: 14px;
