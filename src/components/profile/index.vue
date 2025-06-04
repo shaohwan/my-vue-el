@@ -39,6 +39,17 @@
         </el-tag>
       </el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ user.createTime || '未知' }}</el-descriptions-item>
+      <el-descriptions-item label="岗位">
+        <el-tag
+          v-for="position in user.positions"
+          :key="position.id"
+          type="info"
+          style="margin-right: 12px"
+        >
+          {{ position.name || '未知岗位' }}
+        </el-tag>
+        <span v-if="!user.positions.length">无岗位</span>
+      </el-descriptions-item>
       <el-descriptions-item label="角色">
         <el-tag v-if="user.superAdmin" type="warning">超级管理员</el-tag>
         <template v-else>
@@ -159,6 +170,7 @@ const user = ref({
   superAdmin: false,
   createTime: '',
   roles: [],
+  positions: [],
 })
 
 // 获取用户名首字母

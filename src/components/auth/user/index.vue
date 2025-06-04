@@ -81,6 +81,7 @@
       :title="dialogTitle"
       :form="form"
       :roles="roles"
+      :positions="positions"
       :visible="dialogVisible"
       @update:visible="dialogVisible = $event"
       @save="saveUser"
@@ -115,6 +116,7 @@ import AddOrUpdate from './add-or-update.vue'
 
 const users = ref([])
 const roles = ref([])
+const positions = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const form = ref({
@@ -126,6 +128,7 @@ const form = ref({
   phone: '',
   enabled: true,
   roleIds: [],
+  positionIds: [],
 })
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -148,6 +151,7 @@ const showDialog = (title, user = null) => {
         phone: user.phone || '',
         enabled: user.enabled,
         roleIds: user.roles ? user.roles.map((role) => role.id) : [],
+        positionIds: user.positions ? user.positions.map((position) => position.id) : [],
       }
     : {
         id: null,
@@ -158,6 +162,7 @@ const showDialog = (title, user = null) => {
         phone: '',
         enabled: true,
         roleIds: [],
+        positionIds: [],
       }
   dialogVisible.value = true
 }
@@ -293,5 +298,9 @@ onMounted(async () => {
   await fetchUsers()
   const response = await service.get('/api/role')
   roles.value = response.content
+  const response1 = await service.get('/api/post')
+  positions.value = response1.content
+  console.log('Roles:', roles.value)
+  console.log('Positions:', positions.value)
 })
 </script>

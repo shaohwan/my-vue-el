@@ -28,6 +28,21 @@
       <el-form-item label="启用状态" prop="enabled">
         <el-switch v-model="formData.enabled" />
       </el-form-item>
+      <el-form-item label="岗位分配" prop="positionIds">
+        <el-select
+          v-model="formData.positionIds"
+          multiple
+          placeholder="请选择岗位"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="position in positions"
+            :key="position.id"
+            :label="position.name"
+            :value="position.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="角色分配" prop="roleIds">
         <el-select v-model="formData.roleIds" multiple placeholder="请选择角色" style="width: 100%">
           <el-option v-for="role in roles" :key="role.id" :label="role.name" :value="role.id" />
@@ -48,6 +63,7 @@ const props = defineProps({
   title: { type: String, required: true },
   form: { type: Object, required: true },
   roles: { type: Array, required: true },
+  positions: { type: Array, required: true },
   visible: { type: Boolean, default: false },
 })
 
