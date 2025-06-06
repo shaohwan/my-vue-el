@@ -9,10 +9,6 @@
       @select="handleSelect"
       router
     >
-      <el-menu-item index="/home">
-        <el-icon><House /></el-icon>
-        <span>首页</span>
-      </el-menu-item>
       <menu-item v-for="menu in filteredMenuList" :key="menu.id" :menu="menu" :level="0" />
     </el-menu>
   </el-aside>
