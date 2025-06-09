@@ -5,6 +5,22 @@
         <el-form-item label="用户名">
           <el-input v-model="queryForm.username" placeholder="请输入用户名" @clear="handleSearch" />
         </el-form-item>
+        <el-form-item label="开始时间">
+          <el-date-picker
+            v-model="queryForm.startTime"
+            type="date"
+            placeholder="选择开始时间"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-date-picker
+            v-model="queryForm.endTime"
+            type="date"
+            placeholder="选择结束时间"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch" v-auth="'log:login:search'"
             >搜索</el-button
@@ -96,6 +112,8 @@ const fetchLogs = async () => {
       page: currentPage.value - 1, // 0-based page for backend
       size: pageSize.value,
       username: queryForm.value.username || null,
+      startTime: queryForm.value.startTime || null,
+      endTime: queryForm.value.endTime || null,
     },
   })
   logs.value = response.content
@@ -108,7 +126,7 @@ const handleSearch = () => {
 }
 
 const resetForm = () => {
-  queryForm.value = { username: '' }
+  queryForm.value = { username: '', startTime: '', endTime: '' }
   currentPage.value = 1
   fetchLogs()
 }
