@@ -1,14 +1,7 @@
 <template>
   <el-aside width="220px" class="custom-aside">
-    <el-menu
-      :default-active="activeIndex"
-      class="custom-menu"
-      background-color="transparent"
-      text-color="#fff"
-      active-text-color="#fff"
-      @select="handleSelect"
-      router
-    >
+    <el-menu :default-active="activeIndex" class="custom-menu" background-color="transparent" text-color="#fff"
+      active-text-color="#fff" @select="handleSelect" router>
       <menu-item v-for="menu in filteredMenuList" :key="menu.id" :menu="menu" :level="0" />
     </el-menu>
   </el-aside>
@@ -21,26 +14,32 @@
   height: 100%;
   overflow: auto;
 }
+
 .custom-menu {
   border-right: none;
 }
+
 :deep(.el-menu-item),
 :deep(.el-sub-menu__title) {
   font-size: 14px;
 }
+
 :deep(.el-menu-item.is-active),
 :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
   background: transparent !important;
 }
+
 :deep(.el-menu-item .el-icon),
 :deep(.el-sub-menu__title .el-icon) {
   color: #fff;
   margin-right: 8px;
 }
+
 :deep(.el-sub-menu .el-menu-item) {
   font-size: 13px;
   padding-left: calc(var(--level) * 20px + 20px) !important;
 }
+
 :deep(.el-sub-menu .el-menu) {
   padding-left: 0 !important;
 }
@@ -49,7 +48,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { House } from '@element-plus/icons-vue'
 import MenuItem from './MenuItem.vue'
 import { basePath as routerBasePath } from '@/router'
 

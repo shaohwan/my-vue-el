@@ -98,4 +98,96 @@ service.interceptors.response.use(
   },
 )
 
+// 流式请求方法 - 清理双重 data: 前缀
+service.stream = function (url, data, { onMessage, onError, onDone } = {}) {
+  const authStore = useAuthStore()
+  if (!authStore.accessToken) {
+    onError?.('请先登录')
+    return () => { }
+  }
+
+  const controller = new AbortController()
+  const signal = controller.signal
+
+  console.log('开始流式请求:', { url, data })
+
+  fetch(`${service.defaults.baseURL}${url}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authStore.accessToken}`,
+    },
+    body: JSON.stringify(data),
+    signal,
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            console.log('流式读取完成')
+            break
+          }
+
+          const chunk = decoder.decode(value, { stream: true })
+          buffer += chunk
+
+          // 按 SSE 消息分割
+          const messages = buffer.split('\n\n')
+          buffer = messages.pop() || ''
+
+          for (const message of messages) {
+            const trimmedMessage = message.trim()
+            if (!trimmedMessage) continue
+
+            // 清理所有 data: 前缀
+            let content = trimmedMessage.replace(/data:\s*/g, '')
+
+            if (content === '[DONE]') {
+              console.log('收到结束标记 [DONE]')
+              onDone?.()
+              return
+            }
+
+            if (content) {
+              onMessage?.(content)
+            }
+          }
+        }
+
+        // 处理缓冲区剩余内容
+        if (buffer.trim()) {
+          const trimmedBuffer = buffer.trim()
+          let content = trimmedBuffer.replace(/data:\s*/g, '')
+          if (content && content !== '[DONE]') {
+            onMessage?.(content)
+          }
+        }
+      } finally {
+        reader.releaseLock()
+        onDone?.()
+      }
+    })
+    .catch((error) => {
+      if (error.name !== 'AbortError') {
+        console.error('流式请求错误:', error)
+        onError?.(error.message)
+      }
+    })
+
+  return () => {
+    console.log('中止流式请求')
+    controller.abort()
+  }
+}
+
 export default service

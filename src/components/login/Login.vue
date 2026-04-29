@@ -2,38 +2,19 @@
   <div class="login-container">
     <div class="login-bg"></div>
     <div class="login-content">
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        class="login-form"
-        @submit.prevent="handleLogin"
-      >
+      <el-form ref="loginFormRef" :model="loginForm" class="login-form" @submit.prevent="handleLogin">
         <div class="login-header">
           <h2 class="title">欢迎登录</h2>
           <p class="subtitle">请输入您的账号和密码</p>
         </div>
 
         <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
-            size="large"
-            :prefix-icon="User"
-            clearable
-          />
+          <el-input v-model="loginForm.username" placeholder="请输入用户名" size="large" :prefix-icon="User" clearable />
         </el-form-item>
 
         <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
-            placeholder="请输入密码"
-            size="large"
-            :prefix-icon="Lock"
-            show-password
-            clearable
-            @keyup.enter="handleLogin"
-          />
+          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" size="large" :prefix-icon="Lock"
+            show-password clearable @keyup.enter="handleLogin" />
         </el-form-item>
 
         <el-form-item>
@@ -148,6 +129,7 @@
     padding: var(--spacing-md);
     max-height: calc(100vh - 40px);
   }
+
   .login-header,
   .login-footer {
     margin: var(--spacing-sm) 0;
@@ -156,7 +138,7 @@
 </style>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { User, Lock } from '@element-plus/icons-vue'
